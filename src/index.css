@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --color-pastel-bg: #FAF9F6;
+  --color-pastel-pink: #FFD1DC;
+  --color-pastel-blue: #AEC6CF;
+  --color-pastel-purple: #C3B1E1;
+  --color-pastel-yellow: #FDFD96;
+}
+
+@layer utilities {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 209, 220, 0.5);
+    box-shadow: 0 8px 32px 0 rgba(255, 209, 220, 0.15);
+  }
+
+  .text-shadow-glow {
+    text-shadow: 0 0 10px rgba(255, 209, 220, 0.8);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-15px) scale(1.03); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(4px, 2px); }
+  50% { transform: translate(-4px, -2px); }
+  75% { transform: translate(4px, -2px); }
+}
+
+@keyframes ripple-purple {
+  0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 0 0px rgba(138, 43, 226, 0.4); }
+  100% { transform: scale(3); opacity: 0; box-shadow: 0 0 0 50px rgba(138, 43, 226, 0); }
+}
+
+@keyframes ripple-gold {
+  0% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 0 0px rgba(255, 215, 0, 0.5); }
+  100% { transform: scale(4); opacity: 0; box-shadow: 0 0 0 60px rgba(255, 215, 0, 0); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
+}
+
+.animate-ripple-purple {
+  animation: ripple-purple 0.8s ease-out forwards;
+}
+
+.animate-ripple-gold {
+  animation: ripple-gold 1s ease-out forwards;
+}
