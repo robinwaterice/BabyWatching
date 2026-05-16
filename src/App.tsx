@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { RotateCcw, Home, Clock, Trophy, Settings } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceArea, ResponsiveContainer } from 'recharts';
-import { BackgroundStars, NeutralBaby, ChaosHybrid, PlayfulAngel, Angel, Archangel, PlayfulImp, Demon, Archdemon } from './components/EvolutionCharacters';
+import { 
+  NeutralBaby, Angel, PlayfulAngel, PlayfulImp, Demon, Archdemon, Archangel, ChaosHybrid, 
+  BackgroundStars 
+} from './components/EvolutionCharacters';
 import { RecordMenu, ActivityModule } from './components/RecordMenu';
 import { MedicalRecordMenu } from './components/MedicalRecordMenu';
 import { AchievementsView } from './components/AchievementsView';
@@ -16,22 +19,8 @@ interface GameState {
   currentEvolution: string; // 當前演化形態
 }
 
-interface Activity {
-  id: string;
-  timeStr: string;
-  dateStr?: string;
-  timestamp?: number;
-  action: string;
-  xpGain: number;
-  alphaGain: number;
-  detail?: string;
-  module?: string;
-  _module?: string;
-  temperature?: number;
-  treatments?: string[];
-  symptoms?: string[];
-  note?: string;
-}
+import { LogTabView, Activity } from './components/LogTabView';
+import { playXpSound, playLevelUpSound, playAchievementSound } from './utils/audio';
 
 interface Milestone {
   id: string;
@@ -59,328 +48,7 @@ const calculateAge = (bday: string) => {
   return `${years > 0 ? years + '歲 ' : ''}${months > 0 ? months + '個月 ' : ''}${days}天`;
 }
 
-function LogTabView({ activityLog, onDelete, onEdit }: { activityLog: Activity[], onDelete: (id: string) => void, onEdit: (log: Activity) => void }) {
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  const filterOptions = [
-    { label: '飲食', id: 'feeding', icon: '🍼', color: '#fcd34d', classBg: 'bg-yellow-100', classText: 'text-yellow-600', classBorder: 'border-yellow-300' },
-    { label: '嗯嗯', id: 'diaper', icon: '💩', color: '#d1d5db', classBg: 'bg-slate-100', classText: 'text-slate-600', classBorder: 'border-slate-300' },
-    { label: '睡眠', id: 'sleep', icon: '💤', color: '#6ee7b7', classBg: 'bg-emerald-100', classText: 'text-emerald-600', classBorder: 'border-emerald-300' },
-    { label: '日常', id: 'mood', icon: '💖', color: '#fca5a5', classBg: 'bg-red-100', classText: 'text-red-600', classBorder: 'border-red-300' },
-    { label: '醫療', id: 'medical', icon: '🏥', color: '#f43f5e', classBg: 'bg-rose-100', classText: 'text-rose-600', classBorder: 'border-rose-300' },
-  ];
-
-  const getModuleForLog = (log: Activity) => {
-    if (log.module) return log.module;
-    if (['餵奶'].includes(log.action)) return 'feeding';
-    if (['噴屎'].includes(log.action)) return 'diaper';
-    if (['睡覺'].includes(log.action)) return 'sleep';
-    return 'mood';
-  };
-
-  const handleFilterToggle = (id: string) => {
-    setActiveFilters(prev => {
-      if (id === 'medical') {
-        return prev.includes('medical') ? [] : ['medical'];
-      } else {
-        if (prev.includes('medical')) return [id];
-        return prev.includes(id) ? prev.filter(l => l !== id) : [...prev, id];
-      }
-    });
-    setSelectedDate(null);
-  };
-
-  const processedLogs = activityLog.map(log => {
-      let ts = log.timestamp;
-      if (!ts) {
-          const parsedId = parseInt(log.id);
-          if (!isNaN(parsedId) && parsedId > 1600000000000) ts = parsedId;
-          else ts = Date.now();
-      }
-      const d = new Date(ts);
-      return {
-          ...log,
-          timestamp: ts,
-          dateStr: `${d.getMonth() + 1}/${d.getDate()}`,
-          _module: getModuleForLog(log)
-      };
-  });
-
-  const last7Days = Array.from({length: 7}).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return `${d.getMonth()+1}/${d.getDate()}`;
-  });
-
-  const chartData = last7Days.map(dateStr => {
-    const logsOnDate = processedLogs.filter(l => l.dateStr === dateStr);
-    const counts: Record<string, number> = {};
-    filterOptions.forEach(f => counts[f.id] = 0);
-    
-    logsOnDate.forEach(log => {
-      if (counts[log._module] !== undefined) {
-        counts[log._module]++;
-      }
-    });
-
-    const totalActive = activeFilters.reduce((sum, f) => sum + counts[f], 0);
-
-    return {
-      dateStr,
-      counts,
-      totalActive,
-      logs: logsOnDate
-    };
-  });
-
-  const maxTotal = Math.max(...chartData.map(d => d.totalActive), 5); // base scale 5
-  const todayStr = last7Days[6];
-  const todayData = chartData[6];
-
-  const detailsData = selectedDate 
-    ? processedLogs.filter(l => l.dateStr === selectedDate && (activeFilters.length === 0 || activeFilters.includes(l._module)))
-    : processedLogs.filter(l => activeFilters.length === 0 || activeFilters.includes(l._module));
-
-  const showMedicalChart = activeFilters.includes('medical');
-
-  // Prepare fever chart data
-  const feverData = processedLogs
-    .filter(l => l.temperature)
-    .sort((a, b) => a.timestamp - b.timestamp)
-    .map(l => {
-      let marker = '';
-      if (l.treatments) {
-        if (l.treatments.some(t => t.includes('抗生素'))) marker = '💊✨';
-        else if (l.treatments.some(t => t.includes('塞劑'))) marker = '💉';
-        else if (l.treatments.some(t => t.includes('藥水') || t.includes('感冒藥'))) marker = '💊';
-      }
-      return {
-         time: l.timestamp,
-         displayTime: `${l.dateStr} ${l.timeStr}`,
-         temperature: l.temperature,
-         marker
-      };
-    });
-
-  const CustomizedDot = (props: any) => {
-    const { cx, cy, payload } = props;
-    if (!payload.marker) return <circle cx={cx} cy={cy} r={3} fill="#f43f5e" />;
-    return (
-      <g transform={`translate(${cx},${cy})`}>
-        <circle r={3} fill="#f43f5e" />
-        <text x={0} y={-8} textAnchor="middle" fontSize="12">{payload.marker}</text>
-      </g>
-    );
-  };
-
-  return (
-    <motion.div
-      key="log"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="flex-1 w-full h-full flex flex-col p-4 overflow-hidden max-w-md mx-auto"
-    >
-      <h2 className="text-xl font-black text-neutral-700 mb-4 tracking-wider self-center text-shadow-sm mt-2">🐣 成長軌跡</h2>
-
-      {/* Top filters */}
-      <div className="grid grid-cols-5 gap-2 mb-6 shrink-0 px-2 mt-2">
-        {filterOptions.map(opt => {
-          const isActive = activeFilters.includes(opt.id);
-          const totalCount = chartData.reduce((sum, d) => sum + (d.counts[opt.id] || 0), 0);
-          return (
-            <div key={opt.id} className="relative aspect-[4/5] flex">
-              <button
-                onClick={() => handleFilterToggle(opt.id)}
-                className={`w-full flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-300 relative overflow-hidden border-2 ${
-                  isActive ? `${opt.classBg} ${opt.classBorder} scale-105 z-10 shadow-sm` : 'bg-neutral-300/50 border-transparent hover:bg-neutral-300/70'
-                }`}
-              >
-                <div className={`w-8 h-10 mb-1.5 rounded flex items-center justify-center shadow-sm ${isActive ? 'bg-white/40' : 'bg-white/50'}`}>
-                  <span className={`text-xl md:text-2xl filter drop-shadow-sm ${!isActive ? 'opacity-70 grayscale' : ''}`}>{opt.icon}</span>
-                </div>
-                <span className={`text-[10px] md:text-[11px] font-black ${isActive ? opt.classText : 'text-neutral-500'}`}>
-                  {opt.label}
-                </span>
-              </button>
-              <div className="absolute -top-1.5 -right-1.5 text-[9px] font-extrabold flex items-center justify-center min-w-[22px] h-[22px] px-1 rounded-full shadow-sm z-20 bg-white text-neutral-500 border border-neutral-100">
-                {totalCount}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {showMedicalChart ? (
-         <div className="w-full bg-white rounded-[2rem] p-4 shadow-[0_8px_32px_rgba(244,63,94,0.1)] border border-rose-100 mb-6 flex flex-col relative min-h-[200px] shrink-0">
-           <h3 className="text-xs font-black text-rose-500 mb-2 flex items-center gap-1"><span className="text-base">🌡️</span> 體溫與用藥關聯圖</h3>
-           {feverData.length > 0 ? (
-             <div className="w-full h-[160px] -ml-4">
-               <ResponsiveContainer width="100%" height="100%">
-                 <LineChart data={feverData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                   <XAxis dataKey="displayTime" tick={{ fontSize: 9, fill: '#9CA3AF' }} tickMargin={5} minTickGap={15} />
-                   <YAxis domain={['auto', 'auto']} tick={{ fontSize: 9, fill: '#9CA3AF' }} width={30} />
-                   <Tooltip 
-                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px', fontWeight: 'bold' }}
-                     labelStyle={{ color: '#6B7280', marginBottom: '4px' }}
-                   />
-                   {/* @ts-ignore */}
-                   <ReferenceArea y1={38} y2={45} fill="#fef2f2" fillOpacity={1} />
-                   <Line type="monotone" dataKey="temperature" stroke="#f43f5e" strokeWidth={2.5} dot={<CustomizedDot />} activeDot={{ r: 6, fill: '#f43f5e', stroke: '#fff', strokeWidth: 2 }} isAnimationActive={false} />
-                 </LineChart>
-               </ResponsiveContainer>
-             </div>
-           ) : (
-             <div className="flex-1 flex items-center justify-center text-xs font-bold text-neutral-400">目前沒有體溫紀錄</div>
-           )}
-         </div>
-      ) : (
-        <div className="w-full bg-neutral-300/60 rounded-[2rem] p-3 shadow-inner border border-black/5 backdrop-blur-sm mb-6 flex flex-col items-center relative min-h-[160px] shrink-0">
-          {activeFilters.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-              <span className="text-neutral-500 font-bold bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-[11px] shadow-sm flex gap-1.5 items-center">
-                <span>👆</span> 點擊上方卡片顯示動態圖表
-              </span>
-            </div>
-          )}
-
-          <div className="w-full bg-white rounded-xl h-[120px] flex items-end justify-between px-2 gap-2 mt-1 relative z-0 pt-2 pb-1 shadow-sm">
-          {chartData.map((d, i) => {
-            let currentY = 0;
-            const isSelected = selectedDate === d.dateStr;
-            const heightMultiplier = 120 / maxTotal;
-            const hasData = activeFilters.some(f => (d.counts[f] || 0) > 0);
-
-            return (
-              <div 
-                key={d.dateStr} 
-                className={`flex flex-col items-center flex-1 transition-all h-full relative ${hasData ? 'cursor-pointer hover:bg-white/30 rounded-xl' : ''}`}
-                onClick={() => {
-                  if (activeFilters.length > 0 && hasData) setSelectedDate(isSelected ? null : d.dateStr);
-                }}
-              >
-                <div className="w-full h-full flex flex-col justify-end relative z-10">
-                  <svg className="w-full h-full overflow-visible" preserveAspectRatio="none">
-                    <AnimatePresence>
-                      {activeFilters.map(f => {
-                        const count = d.counts[f] || 0;
-                        if (count === 0) return null;
-                        const h = count * heightMultiplier;
-                        const y = 120 - currentY - h;
-                        currentY += h;
-                        const opt = filterOptions.find(o => o.id === f);
-                        
-                        return (
-                          <motion.rect
-                            key={f}
-                            initial={{ y: 120, height: 0, opacity: 0 }}
-                            animate={{ y, height: h, opacity: 1 }}
-                            exit={{ y: 120, height: 0, opacity: 0 }}
-                            transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                            x="20%"
-                            width="60%"
-                            fill={opt?.color}
-                            className={`${activeFilters.length > 1 ? 'stroke-white stroke-[1.5px]' : ''}`}
-                            rx="4"
-                          />
-                        );
-                      })}
-                    </AnimatePresence>
-                  </svg>
-                </div>
-                {/* Active day background indicator */}
-                {isSelected && (
-                  <motion.div layoutId="col-bg" className="absolute inset-0 bg-neutral-100/50 border border-neutral-200/50 shadow-sm rounded-xl -z-0" />
-                )}
-              </div>
-            );
-          })}
-        </div>
-        
-        {/* X Axis Labels */}
-        <div className="w-full flex justify-between px-2 mt-3 mb-1">
-          {chartData.map(d => (
-            <div key={d.dateStr} className={`flex-1 text-center text-[9px] md:text-[10px] font-black z-10 transition-colors ${selectedDate === d.dateStr ? 'text-pastel-purple' : 'text-neutral-400'}`}>
-              {d.dateStr === todayStr ? '今日' : d.dateStr}
-            </div>
-          ))}
-        </div>
-      </div>
-      )}
-
-      {/* Details List */}
-      <motion.div
-        key="details-list"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        className="flex-1 w-full flex flex-col min-h-0"
-      >
-        <div className="flex items-center justify-between mb-3 px-2 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">{selectedDate ? '🗓️' : '📋'}</span>
-            <span className="font-extrabold text-neutral-600 text-[13px]">{selectedDate ? `${selectedDate} 詳細紀錄` : '所有詳細紀錄'}</span>
-          </div>
-          <span className="text-[10px] font-bold text-white bg-neutral-300/80 px-2.5 py-1 shadow-sm rounded-full">{detailsData.length} 筆</span>
-        </div>
-            
-            <div className="flex-1 overflow-y-auto space-y-2 px-1 pb-10">
-              {detailsData.length === 0 ? (
-                <div className="text-center text-neutral-400 text-sm font-bold mt-4">無符合的紀錄</div>
-              ) : (
-                detailsData.map(log => {
-                  const opt = filterOptions.find(o => o.id === log._module);
-                  return (
-                    <motion.div 
-                      key={log.id} 
-                      layout
-                      initial={{opacity: 0, scale: 0.95}}
-                      animate={{opacity: 1, scale: 1}}
-                      className="p-3 rounded-[1.25rem] flex items-center gap-3 border border-white/80 shadow-sm bg-white/70"
-                    >
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl shrink-0 ${opt?.classBg || 'bg-neutral-100'}`}>
-                        {opt?.icon || '🌟'}
-                      </div>
-                      <div className="flex flex-col flex-1 pl-1">
-                        <span className="font-extrabold text-neutral-700 text-[15px]">{log.action}</span>
-                        {log.detail && <span className="text-[11px] font-bold text-neutral-500 mt-0.5">{log.detail}</span>}
-                        <span className="text-[10px] text-neutral-400 font-bold mt-1">{log.timeStr}</span>
-                          <div className="flex gap-2 mt-2">
-                             <button
-                               onClick={() => onEdit(log)}
-                               className="px-3 py-1 bg-neutral-200 text-neutral-600 rounded-full text-[10px] font-bold hover:bg-neutral-300 transition-colors"
-                             >
-                               修改 Edit
-                             </button>
-                             <button
-                               onClick={() => onDelete(log.id)}
-                               className="px-3 py-1 bg-red-100 text-red-600 rounded-full text-[10px] font-bold hover:bg-red-200 transition-colors"
-                             >
-                               刪除 Delete
-                             </button>
-                          </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1.5">
-                        <span className="text-[10px] font-black text-neutral-500 bg-neutral-200/60 px-2.5 py-0.5 rounded-full">+{log.xpGain} XP</span>
-                        {log.alphaGain !== 0 && (
-                          <span className={`text-[10px] font-black ${log.alphaGain > 0 ? 'text-yellow-500' : 'text-purple-500'}`}>
-                            {log.alphaGain > 0 ? `+${log.alphaGain} 天使` : `${log.alphaGain} 惡魔`}
-                          </span>
-                        )}
-                      </div>
-                    </motion.div>
-                  )
-                })
-              )}
-            </div>
-          </motion.div>
-
-    </motion.div>
-  );
-}
 
 export default function App() {
   // 從 LocalStorage 載入初始狀態，若無則使用預設值
@@ -405,10 +73,16 @@ export default function App() {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [actionEffects, setActionEffects] = useState<{id: number, text: string, type: 'xp'|'glow'|'dark', x: number, y: number}[]>([]);
   const [isShaking, setIsShaking] = useState(false);
+  const characterRef = React.useRef<HTMLDivElement>(null);
   const [activeMenu, setActiveMenu] = useState<ActivityModule | 'medical' | null>(null);
   const [editingRecord, setEditingRecord] = useState<Activity | null>(null);
   const [babyName, setBabyName] = useState(() => localStorage.getItem('babyName') || "小寶寶");
   
+  const [babyGender, setBabyGender] = useState<'boy'|'girl'>(() => {
+    const saved = localStorage.getItem('babyGender');
+    return (saved === 'boy' || saved === 'girl') ? saved : 'boy';
+  });
+
   const [unlockedBadges, setUnlockedBadges] = useState<Record<string, number>>(() => {
     const saved = localStorage.getItem('unlockedBadges');
     return saved ? JSON.parse(saved) : {};
@@ -425,6 +99,20 @@ export default function App() {
   });
   const [birthday, setBirthday] = useState(() => localStorage.getItem('babyBirthday') || "");
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const [vaccineAppointments, setVaccineAppointments] = useState<Record<string, number>>(() => {
+    const saved = localStorage.getItem('babyVaccineAppointments');
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [selectedVaccineId, setSelectedVaccineId] = useState<string | null>(null);
+  const [vaccineQueue, setVaccineQueue] = useState<string[]>([]);
+  const [appointmentDateInput, setAppointmentDateInput] = useState("");
+  const [showAppointmentInput, setShowAppointmentInput] = useState(false);
+  const [dismissedBubbles, setDismissedBubbles] = useState<string[]>([]);
+  const [hasViewedMilestones, setHasViewedMilestones] = useState(false);
+  const [babyHealthState, setBabyHealthState] = useState<boolean>(() => {
+    return localStorage.getItem('babyHealthState') === 'true';
+  });
 
   const ageString = calculateAge(birthday);
 
@@ -455,6 +143,10 @@ export default function App() {
   }, [babyName]);
 
   useEffect(() => {
+    localStorage.setItem('babyGender', babyGender);
+  }, [babyGender]);
+
+  useEffect(() => {
     localStorage.setItem('babyActivityLog', JSON.stringify(activityLog));
   }, [activityLog]);
 
@@ -463,12 +155,21 @@ export default function App() {
   }, [milestones]);
 
   useEffect(() => {
+    localStorage.setItem('babyHealthState', babyHealthState.toString());
+  }, [babyHealthState]);
+
+
+  useEffect(() => {
     localStorage.setItem('babyBirthday', birthday);
   }, [birthday]);
 
   useEffect(() => {
     localStorage.setItem('unlockedBadges', JSON.stringify(unlockedBadges));
   }, [unlockedBadges]);
+
+  useEffect(() => {
+    localStorage.setItem('babyVaccineAppointments', JSON.stringify(vaccineAppointments));
+  }, [vaccineAppointments]);
 
   // 成就解鎖
   const handleUnlockBadge = (badgeId: string) => {
@@ -510,6 +211,9 @@ export default function App() {
     }
 
     setUnlockedBadges(newUnlockedBadges);
+    if (badgesToUnlock.length > 0) {
+      playAchievementSound();
+    }
 
     const d = new Date(now);
     const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
@@ -555,6 +259,9 @@ export default function App() {
 
   // 產生特效的共用方法
   const spawnEffect = (text: string, type: 'xp'|'glow'|'dark', x: number, y: number) => {
+    if (type === 'xp') {
+      playXpSound();
+    }
     const id = Date.now() + Math.random();
     setActionEffects(prev => [...prev, { id, text, type, x, y }]);
     setTimeout(() => {
@@ -630,6 +337,11 @@ export default function App() {
 
     const newActivityLog = [newLog, ...activityLog].slice(0, 50);
     setActivityLog(newActivityLog);
+
+    // 如果是醫療紀錄，自動變成生病狀態
+    if (newLog.module === 'medical' || newLog.action === '醫療紀錄') {
+      setBabyHealthState(true);
+    }
 
     let newlyUnlockedIds: string[] = [];
     const triggerHidden = (id: string) => {
@@ -760,40 +472,25 @@ export default function App() {
     });
   };
 
-  const handleCharacterClick = (event: React.MouseEvent) => {
-    const rect = (event.target as HTMLElement).getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
 
-    // 互動回饋觸發機率 P = 0.5 + (α / 200)
-    const p = 0.5 + (gameState.alignmentScore / 200);
-    const isPositive = Math.random() < p;
-    
-    if (isPositive) {
-      spawnEffect('✨', 'glow', centerX, centerY);
-    } else {
-      spawnEffect('💢', 'dark', centerX, centerY);
-      setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 300);
-    }
-  };
 
   const triggerLevelUp = () => {
+    playLevelUpSound();
     setShowLevelUp(true);
     setTimeout(() => setShowLevelUp(false), 2500);
   };
 
   const renderCharacter = () => {
     switch(gameState.currentEvolution) {
-      case '大天使': return <Archangel />;
-      case '天使': return <Angel />;
-      case '淘氣小天使': return <PlayfulAngel />;
-      case '頑皮小惡魔': return <PlayfulImp />;
-      case '惡魔': return <Demon />;
-      case '大惡魔': return <Archdemon />;
-      case '中立 (LV5以上)': return <ChaosHybrid />;
+      case '大天使': return <Archangel isSick={babyHealthState} />;
+      case '天使': return <Angel isSick={babyHealthState} />;
+      case '淘氣小天使': return <PlayfulAngel isSick={babyHealthState} />;
+      case '頑皮小惡魔': return <PlayfulImp isSick={babyHealthState} />;
+      case '惡魔': return <Demon isSick={babyHealthState} />;
+      case '大惡魔': return <Archdemon isSick={babyHealthState} />;
+      case '中立 (LV5以上)': return <ChaosHybrid isSick={babyHealthState} />;
       case '中立 (LV1-LV4)':
-      default: return <NeutralBaby />;
+      default: return <NeutralBaby isSick={babyHealthState} />;
     }
   };
 
@@ -808,17 +505,44 @@ export default function App() {
     setShowResetConfirm(false);
   };
 
-  // 找出目前在觀察範圍內的未解鎖成就
+  // 找出目前在觀察範圍內的未解鎖成就與疫苗
   const observingBadges = BADGE_DEFS.filter(b => {
-    if (b.type !== 'classic' || unlockedBadges[b.id] || !birthday || b.startMonth === undefined) return false;
+    // 如果該氣泡在此次連線已被點擊隱藏，則不再顯示
+    if (dismissedBubbles.includes(b.id)) return false;
+
+    // 隱藏彩蛋類 (Egg/Hidden)：如果已解鎖，則顯示為提醒氣泡（直到被點擊隱藏）
+    if (b.type.startsWith('hidden_')) {
+      return !!unlockedBadges[b.id];
+    }
+
+    // 一般里程碑與疫苗類：如果已解鎖，就不再顯示氣泡
+    if (unlockedBadges[b.id] || !birthday || b.startMonth === undefined) return false;
+    
+    const isVaccine = b.type.startsWith('vaccine_');
+    
+    // 如果是疫苗且已預約，檢查預約日期
+    if (isVaccine && vaccineAppointments[b.id]) {
+       const appointmentDate = new Date(vaccineAppointments[b.id]);
+       appointmentDate.setHours(0,0,0,0);
+       const today = new Date();
+       today.setHours(0,0,0,0);
+       if (today.getTime() < appointmentDate.getTime()) {
+           return false;
+       }
+    }
+
     const bDate = new Date(birthday);
     const now = new Date();
     const months = (now.getFullYear() - bDate.getFullYear()) * 12 + (now.getMonth() - bDate.getMonth()) + (now.getDate() - bDate.getDate()) / 30;
-    return months >= b.startMonth;
-  });
+    
+    // 疫苗類別提前 14 天 (14/30 個月) 提醒
+    const targetMonth = isVaccine ? b.startMonth - (14 / 30) : b.startMonth;
+    
+    return months >= targetMonth;
+  }).slice(0, 6);
 
   return (
-    <div className={`fixed inset-0 w-full h-[100dvh] bg-[var(--color-pastel-bg)] flex flex-col items-center text-neutral-800 font-sans select-none overflow-hidden ${isShaking ? 'animate-shake' : ''}`}>
+    <div className={`fixed inset-0 w-full h-full bg-[var(--color-pastel-bg)] flex flex-col items-center text-neutral-800 font-sans select-none overflow-hidden ${isShaking ? 'animate-shake' : ''}`}>
       <BackgroundStars />
       
       <div className="relative z-10 w-full h-full flex flex-col pb-16 md:pb-18 overflow-hidden">
@@ -832,68 +556,119 @@ export default function App() {
               transition={{ duration: 0.3 }}
               className="flex-1 w-full h-full flex flex-col items-center p-3 md:p-6 overflow-y-auto relative"
             >
-              {/* 首頁的觀察中提醒氣泡 */}
-              {observingBadges.length > 0 && observingBadges.map((badge, idx) => {
-                const isLeft = idx % 2 === 0;
-                const row = Math.floor(idx / 2);
-                return (
-                  <div 
-                    key={badge.id}
-                    className={`absolute z-20 glass-card bg-yellow-50/90 rounded-2xl p-2 px-3 flex items-center gap-2 shadow-sm border border-yellow-200 animate-bounce cursor-pointer flex-shrink-0 max-w-[150px] ${isLeft ? 'left-2 md:left-4' : 'right-2 md:right-4'}`}
-                    style={{ top: `calc(max(130px, 15vh) + ${row * 70}px)`, animationDelay: `${idx * 0.15}s` }}
-                    onClick={() => setMainTab('milestones')}
-                  >
-                    <span className="text-xl md:text-2xl drop-shadow-sm flex-none">{badge.icon}</span>
-                    <div className="flex flex-col flex-1 overflow-hidden">
-                      <span className="text-[10px] font-black text-yellow-600 tracking-wider">寶寶觀察中</span>
-                      <span className="text-[11px] font-bold text-neutral-600 truncate">{badge.title}</span>
-                    </div>
-                  </div>
-                );
-              })}
+              {/* RPG 風格角色狀態卡片 */}
+              <div className="flex-none w-full max-w-[340px] md:max-w-md glass-card rounded-[1.25rem] p-2.5 md:p-3 mt-3 transition-all z-10 relative border border-white/60 shadow-sm flex items-center gap-3">
+                
+                {/* 左側：等級頭像框 */}
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-[1rem] bg-gradient-to-br from-pastel-purple/20 to-pastel-pink/20 border-2 border-white shadow-inner flex flex-col items-center justify-center shrink-0">
+                  <span className="text-[9px] md:text-[10px] font-black text-neutral-400 uppercase leading-none tracking-widest mb-0.5">LV</span>
+                  <span className="text-2xl md:text-3xl font-black text-neutral-700 leading-none text-shadow-glow">{gameState.level}</span>
+                </div>
 
-
-              {/* 頂部狀態卡片區塊 */}
-              <div className="flex-none w-full max-w-xs md:max-w-md glass-card rounded-2xl p-3 md:p-4 mt-2 transition-all z-10 relative">
-                <div className="flex flex-col mb-2">
-                  <div className="flex justify-between items-center w-full">
-                    <div className="flex items-center gap-2">
-            <h1 className="text-xl md:text-2xl font-extrabold text-neutral-800 tracking-tight text-shadow-glow flex items-center gap-2">
-              Lv. {gameState.level}
-            </h1>
-            <span className="text-[10px] md:text-xs font-bold text-[#888] bg-white/70 px-2 py-0.5 rounded-full tracking-wide shadow-sm border border-white/50">
-              {gameState.currentEvolution}
-            </span>
+                {/* 右側：狀態資訊區 */}
+                <div className="flex-1 flex flex-col justify-center min-w-0">
+                  
+                  {/* 第一排：姓名 + 形態 */}
+                  <div className="flex justify-between items-center w-full mb-1">
                     <input
                       type="text"
                       value={babyName}
                       onChange={(e) => setBabyName(e.target.value)}
-                      className="text-sm md:text-base font-bold text-neutral-600 bg-transparent border-none outline-none w-20 md:w-32 focus:ring-0 p-0 shadow-none focus:border-b focus:border-neutral-300 transition-colors ml-1"
+                      className="text-base md:text-lg font-black text-neutral-800 bg-transparent border-none outline-none focus:ring-0 p-0 shadow-none focus:border-b-2 focus:border-neutral-300 transition-colors w-24 md:w-32 placeholder-neutral-300 truncate"
                       placeholder="輸入名字"
                     />
+                    <span className="text-[9px] md:text-[10px] font-bold text-pastel-purple bg-purple-50 px-2 py-0.5 rounded-lg tracking-wider shadow-sm border border-purple-100/50 shrink-0">
+                      {gameState.currentEvolution}
+                    </span>
                   </div>
-                  <span className="text-[10px] md:text-xs font-bold text-[#888] uppercase tracking-wider">{gameState.xp} / {nextLevelXp} XP</span>
+
+                  {/* 第二排：年紀 + XP 標籤 */}
+                  <div className="flex justify-between items-end w-full mb-1">
+                    <span className="text-[10px] md:text-[11px] font-extrabold text-neutral-500 truncate">
+                      {birthday ? ageString : "(未設定生日)"}
+                    </span>
+                    <span className="text-[9px] md:text-[10px] font-black text-neutral-400 tracking-widest shrink-0">
+                      <span className="text-neutral-700">{gameState.xp}</span> / {nextLevelXp} XP
+                    </span>
+                  </div>
+
+                  {/* 第三排：XP 進度條 */}
+                  <div className="w-full h-1.5 md:h-2 bg-neutral-200/60 rounded-full overflow-hidden relative shadow-inner">
+                    <motion.div
+                      className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-pastel-pink to-pastel-purple rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min((gameState.xp / nextLevelXp) * 100, 100)}%` }}
+                      transition={{ type: "spring", stiffness: 60, damping: 20 }}
+                    />
+                  </div>
                 </div>
-                {birthday && (
-                  <div className="text-[10px] sm:text-[11px] font-bold text-[#888] mt-1.5 px-0.5">
-                    {babyName} 目前：{ageString}
-                  </div>
-                )}
               </div>
-        
-        {/* 優雅細長的 XP 進度條 */}
-        <div className="w-full h-1 bg-white/60 rounded-full overflow-hidden relative shadow-inner">
-          <motion.div
-            className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-pastel-pink to-pastel-purple rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${Math.min((gameState.xp / nextLevelXp) * 100, 100)}%` }}
-            transition={{ type: "spring", stiffness: 60, damping: 20 }}
-          />
-        </div>
-      </div>
+
+
 
       {/* 中央角色區域占位符 */}
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center relative w-full my-2 z-10">
+        
+        {/* 首頁的觀察中提醒氣泡（放在這個區塊內，保證絕對不會擋住上方的資訊卡片） */}
+        {observingBadges.length > 0 && observingBadges.map((badge, idx) => {
+          const isLeft = idx % 2 === 0;
+          const row = Math.floor(idx / 2);
+          
+          const isHidden = badge.type.startsWith('hidden_');
+          const isVaccine = badge.type.startsWith('vaccine_');
+          const isOptional = badge.type === 'vaccine_optional';
+          
+          let bgColor = 'bg-yellow-50/90';
+          let borderColor = 'border-yellow-200';
+          let textColor = 'text-yellow-600';
+          let labelText = '寶寶觀察中';
+
+          if (isHidden) {
+            bgColor = 'bg-purple-50/90';
+            borderColor = 'border-purple-200';
+            textColor = 'text-purple-600';
+            labelText = '發現隱藏彩蛋！';
+          } else if (isVaccine) {
+            bgColor = isOptional ? 'bg-blue-50/90' : 'bg-emerald-50/90';
+            borderColor = isOptional ? 'border-blue-200' : 'border-emerald-200';
+            textColor = isOptional ? 'text-blue-600' : 'text-emerald-600';
+            labelText = isOptional ? '疫苗評估' : '建議接種';
+          }
+
+          return (
+            <div 
+              key={badge.id}
+              className={`absolute z-20 glass-card ${bgColor} rounded-2xl p-2 px-3 flex items-center gap-2 shadow-sm border ${borderColor} animate-bounce cursor-pointer flex-shrink-0 max-w-[140px] md:max-w-[150px] ${isLeft ? 'left-0 md:left-4' : 'right-0 md:right-4'}`}
+              style={{ top: `${row * 65}px`, animationDelay: `${idx * 0.15}s` }}
+              onClick={() => {
+                if (isHidden) {
+                  setDismissedBubbles(prev => [...prev, badge.id]);
+                  setMainTab('milestones');
+                  setHasViewedMilestones(true);
+                } else if (isVaccine) {
+                  const allVaccineIds = observingBadges.filter(b => b.type.startsWith('vaccine_')).map(b => b.id);
+                  const queue = [badge.id, ...allVaccineIds.filter(id => id !== badge.id)];
+                  setVaccineQueue(queue);
+                  setSelectedVaccineId(queue[0]);
+                  setShowAppointmentInput(false);
+                } else {
+                  // 點擊任何一個一般里程碑氣泡時，將畫面上所有的里程碑氣泡都標記為已隱藏
+                  const allMilestoneIds = observingBadges.filter(b => b.type === 'classic').map(b => b.id);
+                  setDismissedBubbles(prev => [...prev, ...allMilestoneIds]);
+                  setMainTab('milestones');
+                  setHasViewedMilestones(true);
+                }
+              }}
+            >
+              <span className="text-xl md:text-2xl drop-shadow-sm flex-none">{badge.icon}</span>
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <span className={`text-[10px] font-black ${textColor} tracking-wider`}>{labelText}</span>
+                <span className="text-[11px] font-bold text-neutral-600 truncate">{badge.title}</span>
+              </div>
+            </div>
+          );
+        })}
+
         <AnimatePresence>
           {showLevelUp && (
             <motion.div
@@ -910,20 +685,20 @@ export default function App() {
         </AnimatePresence>
 
         <motion.div
-          onClick={handleCharacterClick}
+          ref={characterRef}
           whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="w-full h-full max-w-[170px] max-h-[170px] sm:max-w-[220px] sm:max-h-[220px] md:max-w-[280px] md:max-h-[280px] cursor-pointer transition-all duration-500 relative flex items-center justify-center"
+          whileTap={{ scale: 0.85 }}
+          className="w-[170px] h-[170px] sm:w-[220px] sm:h-[220px] md:w-[280px] md:h-[280px] aspect-square cursor-pointer relative flex items-center justify-center flex-none"
         >
           {/* 加入緩慢呼吸 floating 動畫 */}
           <div className="w-full h-full animate-float flex items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.div
-                key={gameState.currentEvolution}
-                initial={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }}
-                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, scale: 1.2, filter: 'blur(10px)' }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
+                key={`${gameState.currentEvolution}-${babyHealthState}`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
                 className="w-full h-full absolute inset-0 drop-shadow-2xl"
               >
                 {renderCharacter()}
@@ -931,6 +706,8 @@ export default function App() {
             </AnimatePresence>
           </div>
         </motion.div>
+
+
       </div>
 
       {/* 下方動作區域 */}
@@ -974,16 +751,6 @@ export default function App() {
            <ActionBtn icon="💖" title="日常" xpText="記錄" onClick={() => setActiveMenu('mood')} />
            <ActionBtn icon="🏥" title="醫療" xpText="記錄" onClick={() => setActiveMenu('medical')} />
         </div>
-
-        <div className="flex justify-center z-10 relative">
-          <button
-            onClick={() => setGameState({ level: 1, xp: 0, alignmentScore: 0, currentEvolution: '中立' })}
-            className="flex items-center gap-1.5 text-[9px] md:text-xs font-bold text-[#888] bg-white/50 hover:bg-white/80 px-3 md:px-4 py-1 md:py-1.5 rounded-full transition-all border border-white/40"
-          >
-            <RotateCcw size={12} />
-            重置到 1 級
-          </button>
-        </div>
       </div>
             </motion.div>
           )}
@@ -995,6 +762,8 @@ export default function App() {
               unlockedBadges={unlockedBadges}
               onUnlockBadge={handleUnlockBadge}
               babyBirthday={birthday}
+              vaccineAppointments={vaccineAppointments}
+              setVaccineAppointments={setVaccineAppointments}
             />
           )}
 
@@ -1019,6 +788,14 @@ export default function App() {
                     className="w-full bg-white/80 rounded-xl px-4 py-3 font-bold text-neutral-700 outline-none focus:ring-2 focus:ring-pastel-pink/50 transition-all border border-white shadow-inner text-sm"
                     placeholder="輸入寶寶暱稱"
                   />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-extrabold text-[#888] ml-2 tracking-widest uppercase">寶寶性別</label>
+                  <div className="flex gap-2">
+                    <button onClick={() => setBabyGender('boy')} className={`flex-1 py-2.5 rounded-xl font-bold border-2 transition-all text-[13px] ${babyGender === 'boy' ? 'border-blue-400 bg-blue-50 text-blue-600 shadow-sm' : 'border-white/80 bg-white/50 text-neutral-400 hover:bg-white/80'}`}>👦 男生</button>
+                    <button onClick={() => setBabyGender('girl')} className={`flex-1 py-2.5 rounded-xl font-bold border-2 transition-all text-[13px] ${babyGender === 'girl' ? 'border-pink-400 bg-pink-50 text-pink-600 shadow-sm' : 'border-white/80 bg-white/50 text-neutral-400 hover:bg-white/80'}`}>👧 女生</button>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -1053,7 +830,13 @@ export default function App() {
       <div className="fixed bottom-0 left-0 right-0 h-16 md:h-[72px] bg-white/80 backdrop-blur-xl border-t border-white/50 z-50 flex items-center justify-around px-2 shadow-[0_-8px_30px_rgba(0,0,0,0.03)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <NavBtn active={mainTab === 'home'} icon={<Home size={22} strokeWidth={2.5} />} label="主頁" onClick={() => setMainTab('home')} />
         <NavBtn active={mainTab === 'log'} icon={<Clock size={22} strokeWidth={2.5} />} label="軌跡" onClick={() => setMainTab('log')} />
-        <NavBtn active={mainTab === 'milestones'} icon={<Trophy size={22} strokeWidth={2.5} />} label="里程碑" onClick={() => setMainTab('milestones')} />
+        <NavBtn 
+          active={mainTab === 'milestones'} 
+          icon={<Trophy size={22} strokeWidth={2.5} />} 
+          label="里程碑" 
+          onClick={() => { setMainTab('milestones'); setHasViewedMilestones(true); }} 
+          hasNotification={observingBadges.length > 0 && !hasViewedMilestones} 
+        />
         <NavBtn active={mainTab === 'profile'} icon={<Settings size={22} strokeWidth={2.5} />} label="設定" onClick={() => setMainTab('profile')} />
       </div>
 
@@ -1076,9 +859,47 @@ export default function App() {
           } else {
             // Glow or Dark feedback over character
             return (
-              <div key={effect.id} className="fixed pointer-events-none z-0" style={{ left: effect.x, top: effect.y, transform: 'translate(-50%, -50%)' }}>
-                <div className={`w-32 h-32 ${effect.type === 'glow' ? 'animate-ripple-gold' : 'animate-ripple-purple'} rounded-full`} />
-              </div>
+              <motion.div
+                key={effect.id}
+                initial={{ 
+                  opacity: 1, 
+                  left: effect.x, 
+                  top: effect.y, 
+                  scale: 0.5, 
+                  x: "-50%", 
+                  y: "-50%",
+                  rotate: (Math.random() - 0.5) * 40 
+                }}
+                animate={{ 
+                  opacity: 0, 
+                  top: effect.y - 150, 
+                  left: effect.x + (Math.random() - 0.5) * 120, 
+                  scale: effect.type === 'dark' ? 2.5 : 2, 
+                  rotate: (Math.random() - 0.5) * 180 
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.2, ease: [0.2, 0.8, 0.2, 1] }}
+                className="fixed pointer-events-none z-0 flex items-center justify-center"
+              >
+                <div className="relative flex items-center justify-center">
+                  {/* 背景漣漪光圈 */}
+                  <div className={`absolute w-24 h-24 rounded-full blur-xl opacity-50 ${
+                    effect.type === 'glow' ? 'bg-yellow-400 animate-pulse' : 'bg-purple-900/80 animate-pulse'
+                  }`} />
+                  
+                  {/* 第二層漣漪動畫 */}
+                  <div className={`absolute w-32 h-32 rounded-full ${
+                    effect.type === 'glow' ? 'animate-ripple-gold' : 'animate-ripple-purple'
+                  }`} />
+                  
+                  {/* 漂浮的表情符號 - 惡魔版本加強陰影與大小 */}
+                  <span className={`drop-shadow-[0_0_15px_rgba(0,0,0,0.3)] relative z-10 ${
+                    effect.type === 'dark' ? 'text-5xl md:text-6xl filter contrast-125' : 'text-4xl md:text-5xl'
+                  }`}>
+                    {effect.text}
+                  </span>
+                </div>
+              </motion.div>
             );
           }
         })}
@@ -1099,6 +920,11 @@ export default function App() {
             onClose={() => { setActiveMenu(null); setEditingRecord(null); }}
             onSubmit={(data) => { handleRecordSubmit(data); setEditingRecord(null); }}
             initialData={editingRecord}
+            isSick={babyHealthState}
+            onRecover={() => {
+              setBabyHealthState(false);
+              spawnEffect('💖 已經康復！', 'xp', window.innerWidth/2, window.innerHeight/2);
+            }}
           />
         )}
       </AnimatePresence>
@@ -1139,6 +965,142 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* 疫苗預約/完成彈窗 */}
+      <AnimatePresence>
+        {selectedVaccineId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="glass-card bg-white/95 w-full max-w-[320px] rounded-[2rem] p-6 text-center shadow-2xl border border-white/60"
+            >
+              {(() => {
+                 const vBadge = BADGE_DEFS.find(b => b.id === selectedVaccineId);
+                 if (!vBadge) return null;
+                 
+                 const handleNextInQueue = () => {
+                    const nextQueue = vaccineQueue.slice(1);
+                    setVaccineQueue(nextQueue);
+                    if (nextQueue.length > 0) {
+                      setSelectedVaccineId(nextQueue[0]);
+                      setShowAppointmentInput(false);
+                    } else {
+                      setSelectedVaccineId(null);
+                    }
+                 };
+                 
+                 return (
+                   <>
+                     <div className="text-4xl mb-3">{vBadge.icon}</div>
+                     <h3 className="text-lg font-black text-neutral-800 mb-1">{vBadge.title}</h3>
+                     {vaccineQueue.length > 1 && (
+                       <div className="text-[10px] font-bold text-white bg-blue-500 rounded-full px-2 py-0.5 inline-block mb-2">
+                         還有 {vaccineQueue.length - 1} 項待確認
+                       </div>
+                     )}
+                     
+                     {!showAppointmentInput ? (
+                       <>
+                         <p className="text-xs font-bold text-neutral-500 mb-5">請選擇您目前的進度</p>
+                         <div className="flex flex-col gap-3">
+                           <button
+                             onClick={() => {
+                               handleUnlockBadge(vBadge.id);
+                               handleNextInQueue();
+                             }}
+                             className="w-full py-3 rounded-xl font-bold bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-200 transition-colors flex justify-center items-center gap-2"
+                           >
+                             ✅ 已經打完啦！
+                           </button>
+                           <button
+                             onClick={() => setShowAppointmentInput(true)}
+                             className="w-full py-3 rounded-xl font-bold bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors flex justify-center items-center gap-2"
+                           >
+                             📅 已經預約了時間
+                           </button>
+                           <button
+                             onClick={() => {
+                               window.alert("已暫時隱藏，我們將在一個禮拜後再次彈出提醒您！");
+                               const nextWeek = new Date();
+                               nextWeek.setDate(nextWeek.getDate() + 7);
+                               setVaccineAppointments(prev => ({
+                                 ...prev,
+                                 [vBadge.id]: nextWeek.getTime()
+                               }));
+                               handleNextInQueue();
+                             }}
+                             className="w-full py-3 rounded-xl font-bold bg-neutral-100 text-neutral-500 hover:bg-neutral-200 transition-colors mt-2"
+                           >
+                             稍後再說
+                           </button>
+                           {vBadge.type === 'vaccine_optional' && (
+                             <button
+                               onClick={() => {
+                                 if (window.confirm("確定未來都不再提醒這項自費疫苗嗎？\n(您隨時可以去「里程碑 > 疫苗接種」頁面手動確認)")) {
+                                   setVaccineAppointments(prev => ({
+                                     ...prev,
+                                     [vBadge.id]: new Date('2099-12-31').getTime()
+                                   }));
+                                   handleNextInQueue();
+                                 }
+                               }}
+                               className="w-full py-3 rounded-xl font-bold bg-red-50 text-red-400 hover:bg-red-100 transition-colors mt-2"
+                             >
+                               🚫 不再提醒
+                             </button>
+                           )}
+                         </div>
+                       </>
+                     ) : (
+                       <>
+                         <p className="text-xs font-bold text-neutral-500 mb-4">請選擇您預約施打的日期</p>
+                         <input 
+                           type="date"
+                           className="w-full bg-neutral-100 rounded-xl px-4 py-3 font-bold text-neutral-700 outline-none border border-neutral-200 mb-5 text-sm uppercase"
+                           value={appointmentDateInput}
+                           onChange={(e) => setAppointmentDateInput(e.target.value)}
+                         />
+                         <div className="flex gap-2">
+                           <button
+                             onClick={() => setShowAppointmentInput(false)}
+                             className="flex-1 py-3 rounded-xl font-bold bg-neutral-100 text-neutral-500 hover:bg-neutral-200 transition-colors"
+                           >
+                             返回
+                           </button>
+                           <button
+                             onClick={() => {
+                               if (!appointmentDateInput) return;
+                               setVaccineAppointments(prev => ({
+                                 ...prev,
+                                 [vBadge.id]: new Date(appointmentDateInput).getTime()
+                               }));
+                               setAppointmentDateInput("");
+                               spawnEffect('📅 已設定提醒', 'xp', window.innerWidth/2, window.innerHeight/2);
+                               handleNextInQueue();
+                             }}
+                             className={`flex-1 py-3 rounded-xl font-bold text-white transition-colors shadow-md ${appointmentDateInput ? 'bg-blue-500 shadow-blue-200 hover:bg-blue-600' : 'bg-blue-300 shadow-none cursor-not-allowed'}`}
+                             disabled={!appointmentDateInput}
+                           >
+                             儲存預約
+                           </button>
+                         </div>
+                       </>
+                     )}
+                   </>
+                 );
+              })()}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
     </div>
   );
 }
@@ -1168,14 +1130,19 @@ function ActionBtn({
   );
 }
 
-function NavBtn({ active, icon, label, onClick }: { active: boolean; icon: React.ReactNode; label: string; onClick: () => void }) {
+function NavBtn({ active, icon, label, onClick, hasNotification }: { active: boolean; icon: React.ReactNode; label: string; onClick: () => void; hasNotification?: boolean }) {
   return (
     <button
       onClick={onClick}
       className={`flex flex-col items-center justify-center w-[72px] h-full transition-all duration-300 relative ${active ? 'text-pastel-purple' : 'text-[#a1a1aa] hover:text-[#888]'}`}
     >
       <div className={`relative z-10 flex flex-col items-center gap-1 ${active ? '-translate-y-[2px]' : ''} transition-transform duration-300`}>
-        {icon}
+        <div className="relative">
+          {icon}
+          {hasNotification && (
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse shadow-sm" />
+          )}
+        </div>
         <span className={`text-[9.5px] font-black tracking-widest ${active ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>{label}</span>
       </div>
       {active && (

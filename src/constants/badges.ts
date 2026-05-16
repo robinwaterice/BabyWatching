@@ -1,4 +1,4 @@
-export type BadgeType = 'classic' | 'hidden_angel' | 'hidden_demon' | 'hidden_neutral';
+export type BadgeType = 'classic' | 'hidden_angel' | 'hidden_demon' | 'hidden_neutral' | 'vaccine_required' | 'vaccine_optional';
 
 export interface BadgeDef {
   id: string;
@@ -33,4 +33,38 @@ export const BADGE_DEFS: BadgeDef[] = [
 
   // 隱藏版成就 (中立)
   { id: 'h_speedrun', title: '新手村速通大師', description: '提早解鎖 3 個以上主線成就', icon: '🚀', type: 'hidden_neutral', xpReward: 300 },
+
+  // 公費必打疫苗 (0-1歲)
+  { id: 'v_hepb_1', title: 'B型肝炎疫苗 (第1劑)', description: '出生24小時內接種', icon: '🛡️', type: 'vaccine_required', xpReward: 50, startMonth: 0 },
+  { id: 'v_hepb_2', title: 'B型肝炎疫苗 (第2劑)', description: '滿 1 個月接種', icon: '🛡️', type: 'vaccine_required', xpReward: 50, startMonth: 1 },
+  { id: 'v_5in1_1', title: '五合一疫苗 (第1劑)', description: '滿 2 個月接種', icon: '💉', type: 'vaccine_required', xpReward: 80, startMonth: 2 },
+  { id: 'v_pcv_1', title: '肺炎鏈球菌疫苗 (第1劑)', description: '滿 2 個月接種', icon: '🩺', type: 'vaccine_required', xpReward: 80, startMonth: 2 },
+  { id: 'v_5in1_2', title: '五合一疫苗 (第2劑)', description: '滿 4 個月接種', icon: '💉', type: 'vaccine_required', xpReward: 80, startMonth: 4 },
+  { id: 'v_pcv_2', title: '肺炎鏈球菌疫苗 (第2劑)', description: '滿 4 個月接種', icon: '🩺', type: 'vaccine_required', xpReward: 80, startMonth: 4 },
+  { id: 'v_bcg', title: '卡介苗', description: '滿 5-8 個月接種', icon: '👶', type: 'vaccine_required', xpReward: 100, startMonth: 5 },
+  { id: 'v_5in1_3', title: '五合一疫苗 (第3劑)', description: '滿 6 個月接種', icon: '💉', type: 'vaccine_required', xpReward: 80, startMonth: 6 },
+  { id: 'v_hepb_3', title: 'B型肝炎疫苗 (第3劑)', description: '滿 6 個月接種', icon: '🛡️', type: 'vaccine_required', xpReward: 50, startMonth: 6 },
+  { id: 'v_flu_1', title: '流感疫苗 (第1劑)', description: '滿 6 個月接種 (視季節)', icon: '❄️', type: 'vaccine_required', xpReward: 50, startMonth: 6 },
+  { id: 'v_flu_2', title: '流感疫苗 (第2劑)', description: '滿 7 個月接種 (首次需打2劑)', icon: '❄️', type: 'vaccine_required', xpReward: 50, startMonth: 7 },
+  { id: 'v_mmr_1', title: 'MMR 混合疫苗 (第1劑)', description: '滿 12 個月接種', icon: '🎯', type: 'vaccine_required', xpReward: 100, startMonth: 12 },
+  { id: 'v_varicella', title: '水痘疫苗 (第1劑)', description: '滿 12 個月接種', icon: '💧', type: 'vaccine_required', xpReward: 100, startMonth: 12 },
+  { id: 'v_pcv_3', title: '肺炎鏈球菌疫苗 (第3劑)', description: '滿 12 個月接種', icon: '🩺', type: 'vaccine_required', xpReward: 80, startMonth: 12 },
+  { id: 'v_hepa_1', title: 'A型肝炎疫苗 (第1劑)', description: '滿 12-15 個月接種', icon: '🛡️', type: 'vaccine_required', xpReward: 80, startMonth: 12 },
+  { id: 'v_je_1', title: '日本腦炎疫苗 (第1劑)', description: '滿 15 個月接種', icon: '🦟', type: 'vaccine_required', xpReward: 100, startMonth: 15 },
+  { id: 'v_5in1_4', title: '五合一疫苗 (第4劑)', description: '滿 15-18 個月接種', icon: '💉', type: 'vaccine_required', xpReward: 120, startMonth: 15 },
+  { id: 'v_hepa_2', title: 'A型肝炎疫苗 (第2劑)', description: '與第1劑至少間隔6個月', icon: '🛡️', type: 'vaccine_required', xpReward: 80, startMonth: 18 },
+  { id: 'v_mmr_2', title: 'MMR 混合疫苗 (第2劑)', description: '滿 5 歲至入學前接種', icon: '🎯', type: 'vaccine_required', xpReward: 100, startMonth: 60 },
+  { id: 'v_4in1', title: '四合一疫苗 (追加)', description: '滿 5 歲至入學前接種', icon: '💉', type: 'vaccine_required', xpReward: 120, startMonth: 60 },
+
+  // 自費建議疫苗
+  { id: 'v_rota', title: '輪狀病毒疫苗', description: '滿 2 個月口服 (預防嚴重腹瀉)', icon: '🦠', type: 'vaccine_optional', xpReward: 100, startMonth: 2 },
+  { id: 'v_entero', title: '腸病毒71型疫苗', description: '滿 2 個月可評估接種', icon: '🦠', type: 'vaccine_optional', xpReward: 100, startMonth: 2 },
+  { id: 'v_pcv_extra', title: '肺炎鏈球菌疫苗 (追加)', description: '滿 6 個月自費追加劑 (增強保護)', icon: '🛡️', type: 'vaccine_optional', xpReward: 100, startMonth: 6 },
+  { id: 'v_meningococcal', title: '腦脊髓膜炎疫苗', description: '滿 2 個月可評估接種', icon: '🧠', type: 'vaccine_optional', xpReward: 150, startMonth: 2 },
+
+  // 高齡主線成就
+  { id: 'c9', title: '第一次說句子', description: '能說出 3 個字以上的短句', icon: '💬', type: 'classic', xpReward: 200, startMonth: 18 },
+  { id: 'c10', title: '第一次自己吃飯', description: '成功使用湯匙將食物送入口', icon: '🥄', type: 'classic', xpReward: 150, startMonth: 15 },
+  { id: 'c11', title: '第一次雙腳跳', description: '離開地面的瞬間', icon: '🐰', type: 'classic', xpReward: 200, startMonth: 24 },
+  { id: 'c12', title: '第一次戒尿布', description: '告別尿布的里程碑', icon: '🚽', type: 'classic', xpReward: 300, startMonth: 30 },
 ];

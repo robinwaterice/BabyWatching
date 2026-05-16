@@ -1,8 +1,22 @@
 import React from 'react';
 
-export function NeutralBaby() {
+export function NeutralBaby({ isSick }: { isSick?: boolean }) {
+  const [imgError, setImgError] = React.useState(false);
+
+  if (!imgError) {
+    return (
+      <img 
+        src={`${import.meta.env.BASE_URL}neutral-baby${isSick ? '-sick' : ''}.png`} 
+        alt="Neutral Baby" 
+        className="w-full h-full object-contain pointer-events-none select-none"
+        draggable={false}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
   return (
-    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-md animate-[pulse_4s_ease-in-out_infinite]">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={`w-full h-full pointer-events-none select-none ${isSick ? 'filter grayscale-[30%] sepia-[40%] hue-rotate-[60deg]' : ''}`}>
       <defs>
         <radialGradient id="skinGrad" cx="50%" cy="40%" r="50%">
           <stop offset="0%" stopColor="#FFFFFF" />
@@ -47,9 +61,22 @@ export function NeutralBaby() {
   );
 }
 
-export function PlayfulAngel() {
+export function PlayfulAngel({ isSick }: { isSick?: boolean }) {
+  const [imgError, setImgError] = React.useState(false);
+
+  if (!imgError) {
+    return (
+      <img 
+        src={`${import.meta.env.BASE_URL}playful-angel${isSick ? '-sick' : ''}.png`} 
+        alt="Playful Angel" 
+        className={`w-full h-full object-contain drop-shadow-md pointer-events-none select-none`}
+        draggable={false}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
   return (
-    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-md animate-[pulse_4s_ease-in-out_infinite]">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={`w-full h-full pointer-events-none select-none ${isSick ? 'filter grayscale-[30%] sepia-[40%] hue-rotate-[60deg]' : ''}`}>
       <defs>
         <radialGradient id="skinGrad" cx="50%" cy="40%" r="50%">
           <stop offset="0%" stopColor="#FFFFFF" />
@@ -104,9 +131,22 @@ export function PlayfulAngel() {
   );
 }
 
-export function Angel() {
+export function Angel({ isSick }: { isSick?: boolean }) {
+  const [imgError, setImgError] = React.useState(false);
+
+  if (!imgError) {
+    return (
+      <img 
+        src={`${import.meta.env.BASE_URL}angel${isSick ? '-sick' : ''}.png`} 
+        alt="Angel" 
+        className={`w-full h-full object-contain drop-shadow-md pointer-events-none select-none`}
+        draggable={false}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
   return (
-    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-md animate-[pulse_4s_ease-in-out_infinite]">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={`w-full h-full pointer-events-none select-none ${isSick ? 'filter grayscale-[30%] sepia-[40%] hue-rotate-[60deg]' : ''}`}>
       <defs>
         <radialGradient id="skinGrad" cx="50%" cy="40%" r="50%">
           <stop offset="0%" stopColor="#FFFFFF" />
@@ -162,9 +202,22 @@ export function Angel() {
   );
 }
 
-export function Archangel() {
+export function Archangel({ isSick }: { isSick?: boolean }) {
+  const [imgError, setImgError] = React.useState(false);
+
+  if (!imgError) {
+    return (
+      <img 
+        src={`${import.meta.env.BASE_URL}archangel${isSick ? '-sick' : ''}.png`} 
+        alt="Archangel" 
+        className="w-full h-full object-contain pointer-events-none select-none"
+        draggable={false}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
   return (
-    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-xl animate-[pulse_4s_ease-in-out_infinite]">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={`w-full h-full pointer-events-none select-none ${isSick ? 'filter grayscale-[30%] sepia-[40%] hue-rotate-[60deg]' : ''}`}>
       <defs>
         {/* [Layer 1] 背景微光 */}
         <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
@@ -276,9 +329,22 @@ export function Archangel() {
   );
 }
 
-export function PlayfulImp() {
+export function PlayfulImp({ isSick }: { isSick?: boolean }) {
+  const [imgError, setImgError] = React.useState(false);
+
+  if (!imgError) {
+    return (
+      <img 
+        src={`${import.meta.env.BASE_URL}playful-imp${isSick ? '-sick' : ''}.png`} 
+        alt="Playful Imp" 
+        className={`w-full h-full object-contain drop-shadow-md pointer-events-none select-none`}
+        draggable={false}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
   return (
-    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-md animate-[pulse_4s_ease-in-out_infinite]">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={`w-full h-full pointer-events-none select-none ${isSick ? 'filter grayscale-[30%] sepia-[40%] hue-rotate-[60deg]' : ''}`}>
       <defs>
         <radialGradient id="skinGrad" cx="50%" cy="40%" r="50%">
           <stop offset="0%" stopColor="#FFFFFF" />
@@ -321,7 +387,7 @@ export function PlayfulImp() {
       <ellipse cx="132" cy="80" rx="10" ry="7" fill="url(#blushGrad)" />
       
       {/* 眼睛: 貓眼調皮 */}
-      <path d="M 68 72 C 73 66, 80 66, 85 72 C 80 78, 73 78, 68 72 Z" fill="#FFFFFF" stroke="#191970" strokeWidth="2" />
+      <path d="M 68 72 C 73 66, 80 66, 86 72 C 80 78, 73 78, 68 72 Z" fill="#FFFFFF" stroke="#191970" strokeWidth="2" />
       <circle cx="76.5" cy="72" r="3.5" fill="#8B0000" />
       <circle cx="77.5" cy="71" r="1" fill="#FFFFFF" />
 
@@ -340,9 +406,22 @@ export function PlayfulImp() {
   );
 }
 
-export function Demon() {
+export function Demon({ isSick }: { isSick?: boolean }) {
+  const [imgError, setImgError] = React.useState(false);
+
+  if (!imgError) {
+    return (
+      <img 
+        src={`${import.meta.env.BASE_URL}demon${isSick ? '-sick' : ''}.png`} 
+        alt="Demon" 
+        className="w-full h-full object-contain pointer-events-none select-none"
+        draggable={false}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
   return (
-    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-lg animate-[pulse_4s_ease-in-out_infinite]">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={`w-full h-full pointer-events-none select-none ${isSick ? 'filter grayscale-[30%] sepia-[40%] hue-rotate-[60deg]' : ''}`}>
       <defs>
         <radialGradient id="skinGrad" cx="50%" cy="40%" r="50%">
           <stop offset="0%" stopColor="#FFFFFF" />
@@ -408,9 +487,22 @@ export function Demon() {
   );
 }
 
-export function Archdemon() {
+export function Archdemon({ isSick }: { isSick?: boolean }) {
+  const [imgError, setImgError] = React.useState(false);
+
+  if (!imgError) {
+    return (
+      <img 
+        src={`${import.meta.env.BASE_URL}archdemon${isSick ? '-sick' : ''}.png`} 
+        alt="Archdemon" 
+        className="w-full h-full object-contain pointer-events-none select-none"
+        draggable={false}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
   return (
-    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-2xl">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={`w-full h-full pointer-events-none select-none ${isSick ? 'filter grayscale-[30%] sepia-[40%] hue-rotate-[60deg]' : ''}`}>
       <defs>
         <radialGradient id="skinGrad" cx="50%" cy="40%" r="50%">
           <stop offset="0%" stopColor="#FFFFFF" />
@@ -484,9 +576,22 @@ export function Archdemon() {
   );
 }
 
-export function ChaosHybrid() {
+export function ChaosHybrid({ isSick }: { isSick?: boolean }) {
+  const [imgError, setImgError] = React.useState(false);
+
+  if (!imgError) {
+    return (
+      <img 
+        src={`${import.meta.env.BASE_URL}chaos-hybrid${isSick ? '-sick' : ''}.png`} 
+        alt="Chaos Hybrid" 
+        className="w-full h-full object-contain pointer-events-none select-none"
+        draggable={false}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
   return (
-    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-lg animate-[pulse_4s_ease-in-out_infinite]">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={`w-full h-full pointer-events-none select-none ${isSick ? 'filter grayscale-[30%] sepia-[40%] hue-rotate-[60deg]' : ''}`}>
       <defs>
         <radialGradient id="skinGrad" cx="50%" cy="40%" r="50%">
           <stop offset="0%" stopColor="#FFFFFF" />

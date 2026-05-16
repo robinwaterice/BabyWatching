@@ -5,12 +5,14 @@ interface MedicalRecordMenuProps {
   onClose: () => void;
   onSubmit: (data: { id?: string, action: string, detail: string, alphaGain: number, xpGain: number, targetTimestamp?: number, temperature?: number, treatments?: string[], symptoms?: string[], note?: string }) => void;
   initialData?: any; // any to avoid Activity cyclic import or we can define it inline
+  isSick?: boolean;
+  onRecover?: () => void;
 }
 
 const SYMPTOMS = ['咳嗽', '流鼻水', '鼻塞', '有痰', '嘔吐', '腹瀉', '出疹子', '活動力下降'];
 const TREATMENTS = ['一般感冒藥', '退燒藥水', '退燒塞劑', '抗生素', '物理處置 (吸鼻涕/拍痰)'];
 
-export function MedicalRecordMenu({ onClose, onSubmit, initialData }: MedicalRecordMenuProps) {
+export function MedicalRecordMenu({ onClose, onSubmit, initialData, isSick, onRecover }: MedicalRecordMenuProps) {
   const [errorMsg, setErrorMsg] = useState('');
   const [logTime, setLogTime] = useState(() => {
     if (initialData?.timestamp) {
@@ -218,6 +220,25 @@ export function MedicalRecordMenu({ onClose, onSubmit, initialData }: MedicalRec
             </button>
           </div>
         </div>
+
+        {/* 康復按鈕 */}
+        {isSick && (
+          <div className="mt-2 pt-3 border-t border-neutral-100 pb-2">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onRecover) onRecover();
+                onClose();
+              }}
+              className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 p-3 rounded-xl border border-emerald-200 transition-colors shadow-sm flex justify-between items-center"
+            >
+              <span className="font-bold text-sm">✅ 寶寶已經完全康復了！</span>
+              <div className="flex gap-1 text-[10px] opacity-80 font-black">
+                <span>點擊解除生病</span>
+              </div>
+            </button>
+          </div>
+        )}
       </motion.div>
 
       <AnimatePresence>
