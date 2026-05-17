@@ -93,23 +93,23 @@ export function AchievementsView({ unlockedBadges, onUnlockBadge, babyBirthday, 
       <h2 className="text-xl font-black text-neutral-700 mb-4 tracking-wider self-center text-shadow-sm mt-2">🏆 成就與紀錄</h2>
 
       {/* 標籤切換 */}
-      <div className="flex w-full bg-neutral-100/80 p-1 rounded-2xl mb-4 shadow-inner border border-neutral-200/50">
+      <div className="flex w-full bg-neutral-100/80 dark:bg-neutral-900/60 p-1 rounded-2xl mb-4 shadow-inner border border-neutral-200/50 dark:border-neutral-800/50">
         <button
           onClick={() => setActiveTab('milestone')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-black transition-all duration-300 ${activeTab === 'milestone' ? 'bg-white text-yellow-600 shadow-sm border border-yellow-100' : 'text-neutral-400 hover:text-neutral-600'}`}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-black transition-all duration-300 ${activeTab === 'milestone' ? 'bg-white dark:bg-neutral-800 text-yellow-600 dark:text-yellow-400 shadow-sm border border-yellow-100 dark:border-neutral-700' : 'text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200'}`}
         >
           成長里程碑
         </button>
         <button
           onClick={() => setActiveTab('vaccine')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-black transition-all duration-300 ${activeTab === 'vaccine' ? 'bg-white text-emerald-600 shadow-sm border border-emerald-100' : 'text-neutral-400 hover:text-neutral-600'}`}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-black transition-all duration-300 ${activeTab === 'vaccine' ? 'bg-white dark:bg-neutral-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100 dark:border-neutral-700' : 'text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200'}`}
         >
           疫苗接種
         </button>
       </div>
 
       {/* 年齡範圍切換 - 完全同步主分頁樣式 */}
-      <div className="flex w-full bg-neutral-100/80 p-1 rounded-2xl mb-6 shadow-inner border border-neutral-200/50">
+      <div className="flex w-full bg-neutral-100/80 dark:bg-neutral-900/60 p-1 rounded-2xl mb-6 shadow-inner border border-neutral-200/50 dark:border-neutral-800/50">
         {[
           { id: '0-1', label: '0-1歲' },
           { id: '1-2', label: '1-2歲' },
@@ -120,8 +120,8 @@ export function AchievementsView({ unlockedBadges, onUnlockBadge, babyBirthday, 
             onClick={() => setAgeRange(range.id as any)}
             className={`flex-1 py-2 rounded-xl text-xs font-black transition-all duration-300 ${
               ageRange === range.id 
-                ? 'bg-white text-neutral-800 shadow-sm border border-neutral-100' 
-                : 'text-neutral-400 hover:text-neutral-600'
+                ? 'bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 shadow-sm border border-neutral-100 dark:border-neutral-700' 
+                : 'text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200'
             }`}
           >
             {range.label}
@@ -165,12 +165,12 @@ export function AchievementsView({ unlockedBadges, onUnlockBadge, babyBirthday, 
                       {isUnlocked && <div className="absolute inset-0 bg-gradient-to-br from-yellow-100/50 to-transparent" />}
                       
                       <span className={`text-4xl drop-shadow-sm mb-2 relative z-10 ${!isUnlocked && 'opacity-60'}`}>{badge.icon}</span>
-                      <span className="font-extrabold text-[#555] text-xs relative z-10">{badge.title}</span>
+                      <span className="font-extrabold text-[#555] dark:text-neutral-200 text-xs relative z-10">{badge.title}</span>
                       
                       {isUnlocked ? (
                         ageStr ? <span className="text-[9px] font-bold text-yellow-600 mt-1 relative z-10 bg-yellow-100/50 px-2 rounded-full">{ageStr}解鎖</span> : <span className="text-[9px] font-bold text-yellow-600 mt-1 relative z-10">已解鎖</span>
                       ) : (
-                        <span className="text-[9px] font-extrabold text-neutral-400 mt-1 relative z-10 flex border-t border-neutral-300 mt-2 pt-1 uppercase w-full justify-center">
+                        <span className="text-[9px] font-extrabold text-neutral-400 dark:text-neutral-400 mt-1 relative z-10 flex border-t border-neutral-300 dark:border-neutral-700/50 mt-2 pt-1 uppercase w-full justify-center">
                           {badge.startMonth !== undefined ? `滿 ${badge.startMonth} 個月起` : '點擊解鎖'}
                         </span>
                       )}
@@ -287,18 +287,18 @@ export function AchievementsView({ unlockedBadges, onUnlockBadge, babyBirthday, 
                       
                       <div className="flex-1 relative z-10">
                         <div className="flex justify-between items-start mb-1 flex-wrap gap-y-1">
-                          <span className={`font-black text-sm ${isUnlocked ? 'text-emerald-800' : 'text-neutral-600'}`}>{badge.title}</span>
+                          <span className={`font-black text-sm ${isUnlocked ? 'text-emerald-800 dark:text-emerald-400' : 'text-neutral-600 dark:text-neutral-200'}`}>{badge.title}</span>
                           <div className="flex gap-1 ml-auto shrink-0">
                             {!isUnlocked && vaccineAppointments?.[badge.id] && (
-                              <span className="text-[10px] font-bold text-neutral-600 bg-neutral-200 rounded-full px-2 py-0.5 shadow-sm">
+                              <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300 bg-neutral-200 dark:bg-neutral-850 rounded-full px-2 py-0.5 shadow-sm border dark:border-neutral-700/50">
                                 📅 預約: {new Date(vaccineAppointments[badge.id]).toLocaleDateString()}
                               </span>
                             )}
                             {inRange && <span className="text-[10px] font-bold text-white bg-red-400 rounded-full px-2 py-0.5 animate-bounce shadow-sm">建議接種</span>}
-                            {isUnlocked && <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 rounded-full px-2 py-0.5">已完成</span>}
+                            {isUnlocked && <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 rounded-full px-2 py-0.5 border dark:border-emerald-900/50">已完成</span>}
                           </div>
                         </div>
-                        <span className={`text-xs font-bold ${isUnlocked ? 'text-emerald-600' : 'text-neutral-500'}`}>{badge.description}</span>
+                        <span className={`text-xs font-bold ${isUnlocked ? 'text-emerald-600 dark:text-emerald-500' : 'text-neutral-500 dark:text-neutral-400'}`}>{badge.description}</span>
                       </div>
                     </motion.button>
                   )
@@ -340,18 +340,18 @@ export function AchievementsView({ unlockedBadges, onUnlockBadge, babyBirthday, 
                       
                       <div className="flex-1 relative z-10">
                         <div className="flex justify-between items-start mb-1 flex-wrap gap-y-1">
-                          <span className={`font-black text-sm ${isUnlocked ? 'text-blue-800' : 'text-neutral-600'}`}>{badge.title}</span>
+                          <span className={`font-black text-sm ${isUnlocked ? 'text-blue-800 dark:text-blue-400' : 'text-neutral-600 dark:text-neutral-200'}`}>{badge.title}</span>
                           <div className="flex gap-1 ml-auto shrink-0">
                             {!isUnlocked && vaccineAppointments?.[badge.id] && (
-                              <span className="text-[10px] font-bold text-neutral-600 bg-neutral-200 rounded-full px-2 py-0.5 shadow-sm">
+                              <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300 bg-neutral-200 dark:bg-neutral-850 rounded-full px-2 py-0.5 shadow-sm border dark:border-neutral-700/50">
                                 📅 預約: {new Date(vaccineAppointments[badge.id]).toLocaleDateString()}
                               </span>
                             )}
-                            {inRange && <span className="text-[10px] font-bold text-blue-500 bg-blue-100 border border-blue-200 rounded-full px-2 py-0.5">可評估</span>}
-                            {isUnlocked && <span className="text-[10px] font-bold text-blue-600 bg-blue-100 rounded-full px-2 py-0.5">已接種</span>}
+                            {inRange && <span className="text-[10px] font-bold text-blue-500 bg-blue-100 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 rounded-full px-2 py-0.5">可評估</span>}
+                            {isUnlocked && <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/60 rounded-full px-2 py-0.5 border dark:border-blue-900/50">已接種</span>}
                           </div>
                         </div>
-                        <span className={`text-xs font-bold ${isUnlocked ? 'text-blue-600' : 'text-neutral-500'}`}>{badge.description}</span>
+                        <span className={`text-xs font-bold ${isUnlocked ? 'text-blue-600 dark:text-blue-500' : 'text-neutral-500 dark:text-neutral-400'}`}>{badge.description}</span>
                       </div>
                     </motion.button>
                   )

@@ -157,7 +157,7 @@ export function LogTabView({ activityLog, onDelete, onEdit }: { activityLog: Act
       transition={{ duration: 0.3 }}
       className="flex-1 w-full h-full flex flex-col p-4 overflow-hidden max-w-md mx-auto"
     >
-      <h2 className="text-xl font-black text-neutral-700 mb-4 tracking-wider self-center text-shadow-sm mt-2">🐣 成長軌跡</h2>
+      <h2 className="text-xl font-black text-neutral-700 dark:text-neutral-200 mb-4 tracking-wider self-center text-shadow-sm mt-2">🐣 成長軌跡</h2>
 
       {/* Top filters */}
       <div className="grid grid-cols-5 gap-2 mb-6 shrink-0 px-2 mt-2">
@@ -169,17 +169,17 @@ export function LogTabView({ activityLog, onDelete, onEdit }: { activityLog: Act
               <button
                 onClick={() => handleFilterToggle(opt.id)}
                 className={`w-full flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-300 relative overflow-hidden border-2 ${
-                  isActive ? `${opt.classBg} ${opt.classBorder} scale-105 z-10 shadow-sm` : 'bg-neutral-300/50 border-transparent hover:bg-neutral-300/70'
+                  isActive ? `${opt.classBg} ${opt.classBorder} scale-105 z-10 shadow-sm` : 'bg-neutral-300/50 dark:bg-neutral-800/80 border-transparent dark:border-neutral-700/50 hover:bg-neutral-300/70 dark:hover:bg-neutral-700/80'
                 }`}
               >
-                <div className={`w-8 h-10 mb-1.5 rounded flex items-center justify-center shadow-sm ${isActive ? 'bg-white/40' : 'bg-white/50'}`}>
+                <div className={`w-8 h-10 mb-1.5 rounded flex items-center justify-center shadow-sm ${isActive ? 'bg-white/40' : 'bg-white/50 dark:bg-neutral-700/50'}`}>
                   <span className={`text-xl md:text-2xl filter drop-shadow-sm ${!isActive ? 'opacity-70 grayscale' : ''}`}>{opt.icon}</span>
                 </div>
-                <span className={`text-[10px] md:text-[11px] font-black ${isActive ? opt.classText : 'text-neutral-500'}`}>
+                <span className={`text-[10px] md:text-[11px] font-black ${isActive ? `${opt.classText} dark:text-white` : 'text-neutral-500 dark:text-neutral-300'}`}>
                   {opt.label}
                 </span>
               </button>
-              <div className="absolute -top-1.5 -right-1.5 text-[9px] font-extrabold flex items-center justify-center min-w-[22px] h-[22px] px-1 rounded-full shadow-sm z-20 bg-white text-neutral-500 border border-neutral-100">
+              <div className="absolute -top-1.5 -right-1.5 text-[9px] font-extrabold flex items-center justify-center min-w-[22px] h-[22px] px-1 rounded-full shadow-sm z-20 bg-white dark:bg-neutral-850 text-neutral-500 dark:text-neutral-300 border border-neutral-100 dark:border-neutral-700/50">
                 {totalCount}
               </div>
             </div>
@@ -188,8 +188,8 @@ export function LogTabView({ activityLog, onDelete, onEdit }: { activityLog: Act
       </div>
 
       {showMedicalChart ? (
-         <div className="w-full bg-white rounded-[2rem] p-4 shadow-[0_8px_32px_rgba(244,63,94,0.1)] border border-rose-100 mb-6 flex flex-col relative min-h-[200px] shrink-0">
-           <h3 className="text-xs font-black text-rose-500 mb-2 flex items-center gap-1"><span className="text-base">🌡️</span> 體溫與用藥關聯圖</h3>
+         <div className="w-full bg-white dark:bg-neutral-900/80 rounded-[2rem] p-4 shadow-[0_8px_32px_rgba(244,63,94,0.1)] border border-rose-100 dark:border-rose-950/60 mb-6 flex flex-col relative min-h-[200px] shrink-0">
+           <h3 className="text-xs font-black text-rose-500 dark:text-rose-400 mb-2 flex items-center gap-1"><span className="text-base">🌡️</span> 體溫與用藥關聯圖</h3>
            {feverData.length > 0 ? (
              <div className="w-full h-[160px] -ml-4">
                <ResponsiveContainer width="100%" height="100%">
@@ -208,20 +208,20 @@ export function LogTabView({ activityLog, onDelete, onEdit }: { activityLog: Act
                </ResponsiveContainer>
              </div>
            ) : (
-             <div className="flex-1 flex items-center justify-center text-xs font-bold text-neutral-400">目前沒有體溫紀錄</div>
+             <div className="flex-1 flex items-center justify-center text-xs font-bold text-neutral-400 dark:text-neutral-300">目前沒有體溫紀錄</div>
            )}
          </div>
       ) : (
-        <div className="w-full bg-neutral-300/60 rounded-[2rem] p-3 shadow-inner border border-black/5 backdrop-blur-sm mb-6 flex flex-col items-center relative min-h-[160px] shrink-0">
+        <div className="w-full bg-neutral-300/60 dark:bg-neutral-900/60 rounded-[2rem] p-3 shadow-inner border border-black/5 dark:border-neutral-800/80 backdrop-blur-sm mb-6 flex flex-col items-center relative min-h-[160px] shrink-0">
           {activeFilters.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-              <span className="text-neutral-500 font-bold bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-[11px] shadow-sm flex gap-1.5 items-center">
+              <span className="text-neutral-500 dark:text-neutral-200 font-bold bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm px-4 py-2 rounded-full text-[11px] shadow-sm flex gap-1.5 items-center">
                 <span>👆</span> 點擊上方卡片顯示動態圖表
               </span>
             </div>
           )}
 
-          <div className="w-full bg-white rounded-xl h-[120px] flex items-end justify-between px-2 gap-2 mt-1 relative z-0 pt-2 pb-1 shadow-sm">
+          <div className="w-full bg-white dark:bg-neutral-900 rounded-xl h-[120px] flex items-end justify-between px-2 gap-2 mt-1 relative z-0 pt-2 pb-1 shadow-sm">
           {chartData.map((d, i) => {
             let currentY = 0;
             const isSelected = selectedDate === d.dateStr;
@@ -267,7 +267,7 @@ export function LogTabView({ activityLog, onDelete, onEdit }: { activityLog: Act
                 </div>
                 {/* Active day background indicator */}
                 {isSelected && (
-                  <motion.div layoutId="col-bg" className="absolute inset-0 bg-neutral-100/50 border border-neutral-200/50 shadow-sm rounded-xl -z-0" />
+                  <motion.div layoutId="col-bg" className="absolute inset-0 bg-neutral-100/50 dark:bg-neutral-850/60 border border-neutral-200/50 dark:border-neutral-700/50 shadow-sm rounded-xl -z-0" />
                 )}
               </div>
             );
@@ -277,7 +277,7 @@ export function LogTabView({ activityLog, onDelete, onEdit }: { activityLog: Act
         {/* X Axis Labels */}
         <div className="w-full flex justify-between px-2 mt-3 mb-1">
           {chartData.map(d => (
-            <div key={d.dateStr} className={`flex-1 text-center text-[9px] md:text-[10px] font-black z-10 transition-colors ${selectedDate === d.dateStr ? 'text-pastel-purple' : 'text-neutral-400'}`}>
+            <div key={d.dateStr} className={`flex-1 text-center text-[9px] md:text-[10px] font-black z-10 transition-colors ${selectedDate === d.dateStr ? 'text-pastel-purple dark:text-purple-300' : 'text-neutral-400 dark:text-neutral-300'}`}>
               {d.dateStr === todayStr ? '今日' : d.dateStr}
             </div>
           ))}
@@ -296,14 +296,14 @@ export function LogTabView({ activityLog, onDelete, onEdit }: { activityLog: Act
         <div className="flex items-center justify-between mb-3 px-2 shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-xl">{selectedDate ? '🗓️' : '📋'}</span>
-            <span className="font-extrabold text-neutral-600 text-[13px]">{selectedDate ? `${selectedDate} 詳細紀錄` : '所有詳細紀錄'}</span>
+            <span className="font-extrabold text-neutral-600 dark:text-neutral-200 text-[13px]">{selectedDate ? `${selectedDate} 詳細紀錄` : '所有詳細紀錄'}</span>
           </div>
-          <span className="text-[10px] font-bold text-white bg-neutral-300/80 px-2.5 py-1 shadow-sm rounded-full">{detailsData.length} 筆</span>
+          <span className="text-[10px] font-bold text-white bg-neutral-300/80 dark:bg-neutral-800 px-2.5 py-1 shadow-sm rounded-full">{detailsData.length} 筆</span>
         </div>
             
             <div className="flex-1 overflow-y-auto space-y-2 px-1 pb-10">
               {detailsData.length === 0 ? (
-                <div className="text-center text-neutral-400 text-sm font-bold mt-4">無符合的紀錄</div>
+                <div className="text-center text-neutral-400 dark:text-neutral-300 text-sm font-bold mt-4">無符合的紀錄</div>
               ) : (
                 detailsData.map(log => {
                   const opt = filterOptions.find(o => o.id === log._module);
@@ -313,32 +313,32 @@ export function LogTabView({ activityLog, onDelete, onEdit }: { activityLog: Act
                       layout
                       initial={{opacity: 0, scale: 0.95}}
                       animate={{opacity: 1, scale: 1}}
-                      className="p-3 rounded-[1.25rem] flex items-center gap-3 border border-white/80 shadow-sm bg-white/70"
+                      className="p-3 rounded-[1.25rem] flex items-center gap-3 border border-white/80 dark:border-neutral-800 shadow-sm bg-white/70 dark:bg-neutral-900/60"
                     >
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl shrink-0 ${opt?.classBg || 'bg-neutral-100'}`}>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl shrink-0 ${opt?.classBg || 'bg-neutral-100'} dark:bg-neutral-800`}>
                         {opt?.icon || '🌟'}
                       </div>
                       <div className="flex flex-col flex-1 pl-1">
-                        <span className="font-extrabold text-neutral-700 text-[15px]">{log.action}</span>
-                        {log.detail && <span className="text-[11px] font-bold text-neutral-500 mt-0.5">{log.detail}</span>}
-                        <span className="text-[10px] text-neutral-400 font-bold mt-1">{log.timeStr}</span>
+                        <span className="font-extrabold text-neutral-700 dark:text-neutral-200 text-[15px]">{log.action}</span>
+                        {log.detail && <span className="text-[11px] font-bold text-neutral-500 dark:text-neutral-300 mt-0.5">{log.detail}</span>}
+                        <span className="text-[10px] text-neutral-400 dark:text-neutral-400 font-bold mt-1">{log.timeStr}</span>
                           <div className="flex gap-2 mt-2">
                              <button
                                onClick={() => onEdit(log)}
-                               className="px-3 py-1 bg-neutral-200 text-neutral-600 rounded-full text-[10px] font-bold hover:bg-neutral-300 transition-colors"
+                               className="px-3 py-1 bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 rounded-full text-[10px] font-bold hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors border dark:border-neutral-700/50"
                              >
                                修改 Edit
                              </button>
                              <button
                                onClick={() => onDelete(log.id)}
-                               className="px-3 py-1 bg-red-100 text-red-600 rounded-full text-[10px] font-bold hover:bg-red-200 transition-colors"
+                               className="px-3 py-1 bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-full text-[10px] font-bold hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors border dark:border-red-900/30"
                              >
                                刪除 Delete
                              </button>
                           </div>
                       </div>
                       <div className="flex flex-col items-end gap-1.5">
-                        <span className="text-[10px] font-black text-neutral-500 bg-neutral-200/60 px-2.5 py-0.5 rounded-full">+{log.xpGain} XP</span>
+                        <span className="text-[10px] font-black text-neutral-500 dark:text-neutral-300 bg-neutral-200/60 dark:bg-neutral-800 px-2.5 py-0.5 rounded-full">+{log.xpGain} XP</span>
                         {log.alphaGain !== 0 && (
                           <span className={`text-[10px] font-black ${log.alphaGain > 0 ? 'text-yellow-500' : 'text-purple-500'}`}>
                             {log.alphaGain > 0 ? `+${log.alphaGain} 天使` : `${log.alphaGain} 惡魔`}

@@ -108,11 +108,66 @@ export default function App() {
   const [vaccineQueue, setVaccineQueue] = useState<string[]>([]);
   const [appointmentDateInput, setAppointmentDateInput] = useState("");
   const [showAppointmentInput, setShowAppointmentInput] = useState(false);
-  const [dismissedBubbles, setDismissedBubbles] = useState<string[]>([]);
+  const [dismissedBubbles, setDismissedBubbles] = useState<string[]>(() => {
+    const saved = localStorage.getItem('babyDismissedBubbles');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [hasViewedMilestones, setHasViewedMilestones] = useState(false);
   const [babyHealthState, setBabyHealthState] = useState<boolean>(() => {
     return localStorage.getItem('babyHealthState') === 'true';
   });
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem('babyTheme') === 'dark';
+  });
+
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      setDeferredPrompt(null);
+    } else {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      if (isIOS) {
+        window.alert(
+          "📱 iOS 系統安裝指南：\n\n1. 點擊瀏覽器底部的「分享」按鈕 (具有向上箭頭的圖示)\n2. 向下滑動並選擇「加入主畫面」\n3. 點擊右上角的「新增」即可建立桌面圖示！"
+        );
+      } else {
+        window.alert(
+          "🌐 安裝指南：\n\n如果您的手機瀏覽器未自動彈出安裝提示，請點擊瀏覽器右上角選單 (三個點)，然後點選「加到主畫面」或「安裝應用程式」！"
+        );
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('babyTheme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('babyTheme', 'light');
+    }
+  }, [darkMode]);
 
   const ageString = calculateAge(birthday);
 
@@ -170,6 +225,25 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('babyVaccineAppointments', JSON.stringify(vaccineAppointments));
   }, [vaccineAppointments]);
+
+  useEffect(() => {
+    localStorage.setItem('babyDismissedBubbles', JSON.stringify(dismissedBubbles));
+  }, [dismissedBubbles]);
+
+  useEffect(() => {
+    if (mainTab === 'milestones') {
+      const unlockedHiddenBadgeIds = BADGE_DEFS
+        .filter(b => b.type.startsWith('hidden_') && unlockedBadges[b.id])
+        .map(b => b.id);
+      
+      if (unlockedHiddenBadgeIds.length > 0) {
+        setDismissedBubbles(prev => {
+          const unique = new Set([...prev, ...unlockedHiddenBadgeIds]);
+          return Array.from(unique);
+        });
+      }
+    }
+  }, [mainTab, unlockedBadges]);
 
   // 成就解鎖
   const handleUnlockBadge = (badgeId: string) => {
@@ -500,6 +574,7 @@ export default function App() {
     setActivityLog([]);
     setMilestones([]);
     setBirthday('');
+    setDismissedBubbles([]);
     localStorage.clear();
     setMainTab('home');
     setShowResetConfirm(false);
@@ -776,37 +851,68 @@ export default function App() {
               transition={{ duration: 0.3 }}
               className="flex-1 w-full h-full flex flex-col items-center p-6 md:p-8 overflow-y-auto max-w-md mx-auto"
             >
-              <h2 className="text-xl font-black text-neutral-700 mb-6 tracking-wider self-center text-shadow-sm mt-2">⚙️ 個人設定</h2>
-              <div className="w-full glass-card p-6 py-8 rounded-3xl flex flex-col gap-6 border border-white/50 shadow-[0_8px_30px_rgba(0,0,0,0.04)] bg-white/50">
+              <h2 className="text-xl font-black text-neutral-700 dark:text-neutral-200 mb-6 tracking-wider self-center text-shadow-sm mt-2">⚙️ 個人設定</h2>
+              <div className="w-full glass-card p-6 py-8 rounded-3xl flex flex-col gap-6 border border-white/50 shadow-[0_8px_30px_rgba(0,0,0,0.04)] bg-white/50 dark:bg-neutral-900/60">
                 
                 <div className="flex flex-col gap-2">
-                  <label className="text-[11px] font-extrabold text-[#888] ml-2 tracking-widest uppercase">寶寶暱稱</label>
+                  <label className="text-[11px] font-extrabold text-[#888] dark:text-neutral-300 ml-2 tracking-widest uppercase">寶寶暱稱</label>
                   <input
                     type="text"
                     value={babyName}
                     onChange={(e) => setBabyName(e.target.value)}
-                    className="w-full bg-white/80 rounded-xl px-4 py-3 font-bold text-neutral-700 outline-none focus:ring-2 focus:ring-pastel-pink/50 transition-all border border-white shadow-inner text-sm"
+                    className="w-full bg-white/80 dark:bg-neutral-850 rounded-xl px-4 py-3 font-bold text-neutral-700 dark:text-neutral-200 outline-none focus:ring-2 focus:ring-pastel-pink/50 transition-all border border-white dark:border-neutral-700 shadow-inner text-sm"
                     placeholder="輸入寶寶暱稱"
                   />
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-[11px] font-extrabold text-[#888] ml-2 tracking-widest uppercase">寶寶性別</label>
+                  <label className="text-[11px] font-extrabold text-[#888] dark:text-neutral-300 ml-2 tracking-widest uppercase">寶寶性別</label>
                   <div className="flex gap-2">
-                    <button onClick={() => setBabyGender('boy')} className={`flex-1 py-2.5 rounded-xl font-bold border-2 transition-all text-[13px] ${babyGender === 'boy' ? 'border-blue-400 bg-blue-50 text-blue-600 shadow-sm' : 'border-white/80 bg-white/50 text-neutral-400 hover:bg-white/80'}`}>👦 男生</button>
-                    <button onClick={() => setBabyGender('girl')} className={`flex-1 py-2.5 rounded-xl font-bold border-2 transition-all text-[13px] ${babyGender === 'girl' ? 'border-pink-400 bg-pink-50 text-pink-600 shadow-sm' : 'border-white/80 bg-white/50 text-neutral-400 hover:bg-white/80'}`}>👧 女生</button>
+                    <button onClick={() => setBabyGender('boy')} className={`flex-1 py-2.5 rounded-xl font-bold border-2 transition-all text-[13px] ${babyGender === 'boy' ? 'border-blue-400 bg-blue-50 text-blue-600 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-400 shadow-sm' : 'border-white/80 bg-white/50 text-neutral-400 dark:text-neutral-400 hover:bg-white/80 dark:hover:bg-neutral-800/80 dark:border-neutral-700/60 dark:bg-neutral-850/50'}`}>👦 男生</button>
+                    <button onClick={() => setBabyGender('girl')} className={`flex-1 py-2.5 rounded-xl font-bold border-2 transition-all text-[13px] ${babyGender === 'girl' ? 'border-pink-400 bg-pink-50 text-pink-600 dark:border-pink-500 dark:bg-pink-950/40 dark:text-pink-400 shadow-sm' : 'border-white/80 bg-white/50 text-neutral-400 dark:text-neutral-400 hover:bg-white/80 dark:hover:bg-neutral-800/80 dark:border-neutral-700/60 dark:bg-neutral-850/50'}`}>👧 女生</button>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-[11px] font-extrabold text-[#888] ml-2 tracking-widest uppercase">寶寶生日</label>
+                  <label className="text-[11px] font-extrabold text-[#888] dark:text-neutral-300 ml-2 tracking-widest uppercase">寶寶生日</label>
                   <input
                     type="date"
                     value={birthday}
                     onChange={(e) => setBirthday(e.target.value)}
-                    className="w-full bg-white/80 rounded-xl px-4 py-3 font-bold text-neutral-700 outline-none focus:ring-2 focus:ring-pastel-pink/50 transition-all border border-white shadow-inner uppercase text-sm"
+                    className="w-full bg-white/80 dark:bg-neutral-850 rounded-xl px-4 py-3 font-bold text-neutral-700 dark:text-neutral-200 outline-none focus:ring-2 focus:ring-pastel-pink/50 transition-all border border-white dark:border-neutral-700 shadow-inner uppercase text-sm"
                   />
                   {ageString && <div className="text-xs font-extrabold text-pastel-purple text-right pr-2 mt-1">目前：{ageString}</div>}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-extrabold text-[#888] dark:text-neutral-300 ml-2 tracking-widest uppercase">顯示模式 Theme</label>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setDarkMode(false)} 
+                      className={`flex-1 py-2.5 rounded-xl font-bold border-2 transition-all text-[13px] flex items-center justify-center gap-1.5 ${!darkMode ? 'border-amber-400 bg-amber-50 text-amber-600 shadow-sm' : 'border-white/80 bg-white/50 text-neutral-400 dark:text-neutral-400 hover:bg-white/80 dark:hover:bg-neutral-800/80 dark:border-neutral-700/60 dark:bg-neutral-850/50'}`}
+                    >
+                      ☀️ 淺色 Light
+                    </button>
+                    <button 
+                      onClick={() => setDarkMode(true)} 
+                      className={`flex-1 py-2.5 rounded-xl font-bold border-2 transition-all text-[13px] flex items-center justify-center gap-1.5 ${darkMode ? 'border-purple-400 bg-purple-950/40 text-purple-300 shadow-sm' : 'border-white/80 bg-white/50 text-neutral-400 dark:text-neutral-400 hover:bg-white/80 dark:hover:bg-neutral-800/80 dark:border-neutral-700/60 dark:bg-neutral-850/50'}`}
+                    >
+                      🌙 深色 Dark
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-extrabold text-[#888] dark:text-neutral-300 ml-2 tracking-widest uppercase">手機應用程式 APP</label>
+                  <button 
+                    onClick={handleInstallApp}
+                    className="w-full py-3 bg-gradient-to-r from-pastel-pink to-pastel-purple text-white font-extrabold rounded-2xl text-[13.5px] hover:shadow-lg hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-white/20 shadow-md cursor-pointer"
+                  >
+                    📲 安裝至手機桌面 (安裝 APP)
+                  </button>
+                  <span className="text-[9.5px] text-neutral-400 dark:text-neutral-400 font-bold pl-2 mt-0.5 leading-relaxed">
+                    在您的 iPhone/iPad (iOS) 或 Android 手機桌面建立獨立 APP 圖示，快速連結免開瀏覽器！
+                  </span>
                 </div>
                 
                 <div className="mt-2 pt-6 border-t border-white/40 flex flex-col items-center">
@@ -1124,8 +1230,8 @@ function ActionBtn({
       className="glass-card flex flex-col items-center justify-center p-1 py-1 md:py-1.5 rounded-lg transition-all gap-0.5 hover:bg-white/80 border border-white/50 min-h-[48px]"
     >
       <span className="text-xl md:text-2xl drop-shadow-sm">{icon}</span>
-      <span className="text-[9px] md:text-[10px] font-black text-[#666] tracking-wide whitespace-nowrap">{title}</span>
-      <span className="text-[7px] md:text-[8px] font-bold text-[#888] bg-white/60 px-1 py-0.5 rounded-full uppercase tracking-widest whitespace-nowrap">{xpText}</span>
+      <span className="text-[9px] md:text-[10px] font-black text-[#666] dark:text-neutral-300 tracking-wide whitespace-nowrap">{title}</span>
+      <span className="text-[7px] md:text-[8px] font-bold text-[#888] dark:text-neutral-400 bg-white/60 dark:bg-neutral-800/80 px-1 py-0.5 rounded-full uppercase tracking-widest whitespace-nowrap">{xpText}</span>
     </motion.button>
   );
 }
@@ -1134,7 +1240,7 @@ function NavBtn({ active, icon, label, onClick, hasNotification }: { active: boo
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center justify-center w-[72px] h-full transition-all duration-300 relative ${active ? 'text-pastel-purple' : 'text-[#a1a1aa] hover:text-[#888]'}`}
+      className={`flex flex-col items-center justify-center w-[72px] h-full transition-all duration-300 relative ${active ? 'text-pastel-purple' : 'text-[#a1a1aa] dark:text-neutral-400 hover:text-[#888] dark:hover:text-neutral-200'}`}
     >
       <div className={`relative z-10 flex flex-col items-center gap-1 ${active ? '-translate-y-[2px]' : ''} transition-transform duration-300`}>
         <div className="relative">
@@ -1146,7 +1252,7 @@ function NavBtn({ active, icon, label, onClick, hasNotification }: { active: boo
         <span className={`text-[9.5px] font-black tracking-widest ${active ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>{label}</span>
       </div>
       {active && (
-        <motion.div layoutId="nav-indicator" className="absolute top-1 bottom-1 w-[60px] bg-pastel-purple/15 rounded-xl border border-white/50 backdrop-blur-sm" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+        <motion.div layoutId="nav-indicator" className="absolute top-1 bottom-1 w-[60px] bg-pastel-purple/15 rounded-xl border border-white/50 dark:border-neutral-700/50 backdrop-blur-sm" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
       )}
     </button>
   );
