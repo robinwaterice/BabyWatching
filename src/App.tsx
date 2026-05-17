@@ -631,6 +631,11 @@ export default function App() {
     return months >= targetMonth;
   }).slice(0, 6);
 
+  const isUltimateEvolution = gameState.currentEvolution === '大天使' || gameState.currentEvolution === '大惡魔';
+  const sizeClasses = isUltimateEvolution
+    ? "w-[220px] h-[220px] sm:w-[285px] sm:h-[285px] md:w-[350px] md:h-[350px]"
+    : "w-[170px] h-[170px] sm:w-[220px] sm:h-[220px] md:w-[270px] md:h-[270px]";
+
   return (
     <div className={`fixed inset-0 w-full h-full bg-[var(--color-pastel-bg)] flex flex-col items-center text-neutral-800 font-sans select-none overflow-hidden ${isShaking ? 'animate-shake' : ''}`}>
       <BackgroundStars />
@@ -778,7 +783,7 @@ export default function App() {
           ref={characterRef}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.85 }}
-          className="w-[170px] h-[170px] sm:w-[220px] sm:h-[220px] md:w-[270px] md:h-[270px] aspect-square cursor-pointer relative flex items-center justify-center flex-none"
+          className={`${sizeClasses} aspect-square cursor-pointer relative flex items-center justify-center flex-none`}
         >
           {/* 加入緩慢呼吸 floating 動畫 */}
           <div className="w-full h-full animate-float flex items-center justify-center">
