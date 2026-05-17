@@ -294,7 +294,9 @@ export default function App() {
     
     let totalXpAdded = 0;
     const newMilestones = badgesToUnlock.map(b => {
-      totalXpAdded += b.xpReward;
+      if (b.type.startsWith('hidden_')) {
+        totalXpAdded += b.xpReward;
+      }
       return {
         id: Date.now().toString() + Math.random(),
         timeStr,
@@ -305,7 +307,9 @@ export default function App() {
 
     setMilestones(prev => [...newMilestones, ...prev]);
 
-    spawnEffect(`+${totalXpAdded} XP`, 'xp', window.innerWidth / 2, window.innerHeight * 0.7);
+    if (totalXpAdded > 0) {
+      spawnEffect(`+${totalXpAdded} XP`, 'xp', window.innerWidth / 2, window.innerHeight * 0.7);
+    }
     
     setGameState(prevState => {
       let currentXp = prevState.xp + totalXpAdded;
@@ -555,16 +559,27 @@ export default function App() {
   };
 
   const renderCharacter = () => {
+    const getAgeGroup = () => {
+      if (!birthday) return '0to1';
+      const bDate = new Date(birthday);
+      const now = new Date();
+      if (isNaN(bDate.getTime())) return '0to1';
+      const months = (now.getFullYear() - bDate.getFullYear()) * 12 + (now.getMonth() - bDate.getMonth());
+      if (months >= 12 && months < 24) return '1to2';
+      return '0to1';
+    };
+    const ageGroup = getAgeGroup();
+
     switch(gameState.currentEvolution) {
-      case '大天使': return <Archangel isSick={babyHealthState} />;
-      case '天使': return <Angel isSick={babyHealthState} />;
-      case '淘氣小天使': return <PlayfulAngel isSick={babyHealthState} />;
-      case '頑皮小惡魔': return <PlayfulImp isSick={babyHealthState} />;
-      case '惡魔': return <Demon isSick={babyHealthState} />;
-      case '大惡魔': return <Archdemon isSick={babyHealthState} />;
-      case '中立 (LV5以上)': return <ChaosHybrid isSick={babyHealthState} />;
+      case '大天使': return <Archangel isSick={babyHealthState} gender={babyGender} ageGroup={ageGroup} />;
+      case '天使': return <Angel isSick={babyHealthState} gender={babyGender} ageGroup={ageGroup} />;
+      case '淘氣小天使': return <PlayfulAngel isSick={babyHealthState} gender={babyGender} ageGroup={ageGroup} />;
+      case '頑皮小惡魔': return <PlayfulImp isSick={babyHealthState} gender={babyGender} ageGroup={ageGroup} />;
+      case '惡魔': return <Demon isSick={babyHealthState} gender={babyGender} ageGroup={ageGroup} />;
+      case '大惡魔': return <Archdemon isSick={babyHealthState} gender={babyGender} ageGroup={ageGroup} />;
+      case '中立 (LV5以上)': return <ChaosHybrid isSick={babyHealthState} gender={babyGender} ageGroup={ageGroup} />;
       case '中立 (LV1-LV4)':
-      default: return <NeutralBaby isSick={babyHealthState} />;
+      default: return <NeutralBaby isSick={babyHealthState} gender={babyGender} ageGroup={ageGroup} />;
     }
   };
 

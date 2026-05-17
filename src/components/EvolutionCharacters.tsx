@@ -1,12 +1,17 @@
-import React from 'react';
+export interface CharacterProps {
+  isSick?: boolean;
+  gender?: 'boy' | 'girl';
+  ageGroup?: string;
+}
 
-export function NeutralBaby({ isSick }: { isSick?: boolean }) {
+export function NeutralBaby({ isSick, gender, ageGroup }: CharacterProps) {
   const [imgError, setImgError] = React.useState(false);
 
   if (!imgError) {
+    const baseName = ageGroup === '1to2' && gender ? `neutral-baby-1to2-${gender}` : 'neutral-baby';
     return (
       <img 
-        src={`${import.meta.env.BASE_URL}neutral-baby${isSick ? '-sick' : ''}.png`} 
+        src={`${import.meta.env.BASE_URL}${baseName}${isSick ? '-sick' : ''}.png`} 
         alt="Neutral Baby" 
         className="w-full h-full object-contain pointer-events-none select-none"
         draggable={false}
@@ -61,13 +66,14 @@ export function NeutralBaby({ isSick }: { isSick?: boolean }) {
   );
 }
 
-export function PlayfulAngel({ isSick }: { isSick?: boolean }) {
+export function PlayfulAngel({ isSick, gender, ageGroup }: CharacterProps) {
   const [imgError, setImgError] = React.useState(false);
 
   if (!imgError) {
+    const baseName = ageGroup === '1to2' && gender ? `playful-angel-1to2-${gender}` : 'playful-angel';
     return (
       <img 
-        src={`${import.meta.env.BASE_URL}playful-angel${isSick ? '-sick' : ''}.png`} 
+        src={`${import.meta.env.BASE_URL}${baseName}${isSick ? '-sick' : ''}.png`} 
         alt="Playful Angel" 
         className={`w-full h-full object-contain drop-shadow-md pointer-events-none select-none`}
         draggable={false}
@@ -131,13 +137,14 @@ export function PlayfulAngel({ isSick }: { isSick?: boolean }) {
   );
 }
 
-export function Angel({ isSick }: { isSick?: boolean }) {
+export function Angel({ isSick, gender, ageGroup }: CharacterProps) {
   const [imgError, setImgError] = React.useState(false);
 
   if (!imgError) {
+    const baseName = ageGroup === '1to2' && gender ? `angel-1to2-${gender}` : 'angel';
     return (
       <img 
-        src={`${import.meta.env.BASE_URL}angel${isSick ? '-sick' : ''}.png`} 
+        src={`${import.meta.env.BASE_URL}${baseName}${isSick ? '-sick' : ''}.png`} 
         alt="Angel" 
         className={`w-full h-full object-contain drop-shadow-md pointer-events-none select-none`}
         draggable={false}
@@ -202,13 +209,14 @@ export function Angel({ isSick }: { isSick?: boolean }) {
   );
 }
 
-export function Archangel({ isSick }: { isSick?: boolean }) {
+export function Archangel({ isSick, gender, ageGroup }: CharacterProps) {
   const [imgError, setImgError] = React.useState(false);
 
   if (!imgError) {
+    const baseName = ageGroup === '1to2' && gender ? `archangel-1to2-${gender}` : 'archangel';
     return (
       <img 
-        src={`${import.meta.env.BASE_URL}archangel${isSick ? '-sick' : ''}.png`} 
+        src={`${import.meta.env.BASE_URL}${baseName}${isSick ? '-sick' : ''}.png`} 
         alt="Archangel" 
         className="w-full h-full object-contain pointer-events-none select-none"
         draggable={false}
@@ -329,13 +337,14 @@ export function Archangel({ isSick }: { isSick?: boolean }) {
   );
 }
 
-export function PlayfulImp({ isSick }: { isSick?: boolean }) {
+export function PlayfulImp({ isSick, gender, ageGroup }: CharacterProps) {
   const [imgError, setImgError] = React.useState(false);
 
   if (!imgError) {
+    const baseName = ageGroup === '1to2' && gender ? `playful-imp-1to2-${gender}` : 'playful-imp';
     return (
       <img 
-        src={`${import.meta.env.BASE_URL}playful-imp${isSick ? '-sick' : ''}.png`} 
+        src={`${import.meta.env.BASE_URL}${baseName}${isSick ? '-sick' : ''}.png`} 
         alt="Playful Imp" 
         className={`w-full h-full object-contain drop-shadow-md pointer-events-none select-none`}
         draggable={false}
@@ -406,13 +415,14 @@ export function PlayfulImp({ isSick }: { isSick?: boolean }) {
   );
 }
 
-export function Demon({ isSick }: { isSick?: boolean }) {
+export function Demon({ isSick, gender, ageGroup }: CharacterProps) {
   const [imgError, setImgError] = React.useState(false);
 
   if (!imgError) {
+    const baseName = ageGroup === '1to2' && gender ? `demon-1to2-${gender}` : 'demon';
     return (
       <img 
-        src={`${import.meta.env.BASE_URL}demon${isSick ? '-sick' : ''}.png`} 
+        src={`${import.meta.env.BASE_URL}${baseName}${isSick ? '-sick' : ''}.png`} 
         alt="Demon" 
         className="w-full h-full object-contain pointer-events-none select-none"
         draggable={false}
@@ -487,13 +497,14 @@ export function Demon({ isSick }: { isSick?: boolean }) {
   );
 }
 
-export function Archdemon({ isSick }: { isSick?: boolean }) {
+export function Archdemon({ isSick, gender, ageGroup }: CharacterProps) {
   const [imgError, setImgError] = React.useState(false);
 
   if (!imgError) {
+    const baseName = ageGroup === '1to2' && gender ? `archdemon-1to2-${gender}` : 'archdemon';
     return (
       <img 
-        src={`${import.meta.env.BASE_URL}archdemon${isSick ? '-sick' : ''}.png`} 
+        src={`${import.meta.env.BASE_URL}${baseName}${isSick ? '-sick' : ''}.png`} 
         alt="Archdemon" 
         className="w-full h-full object-contain pointer-events-none select-none"
         draggable={false}
@@ -576,13 +587,14 @@ export function Archdemon({ isSick }: { isSick?: boolean }) {
   );
 }
 
-export function ChaosHybrid({ isSick }: { isSick?: boolean }) {
+export function ChaosHybrid({ isSick, gender, ageGroup }: CharacterProps) {
   const [imgError, setImgError] = React.useState(false);
 
   if (!imgError) {
+    const baseName = ageGroup === '1to2' && gender ? `chaos-hybrid-1to2-${gender}` : 'chaos-hybrid';
     return (
       <img 
-        src={`${import.meta.env.BASE_URL}chaos-hybrid${isSick ? '-sick' : ''}.png`} 
+        src={`${import.meta.env.BASE_URL}${baseName}${isSick ? '-sick' : ''}.png`} 
         alt="Chaos Hybrid" 
         className="w-full h-full object-contain pointer-events-none select-none"
         draggable={false}

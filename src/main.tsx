@@ -61,6 +61,20 @@ const DeviceSimulator = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const babyGender = localStorage.getItem('babyGender') || 'boy';
+  const birthday = localStorage.getItem('babyBirthday') || '';
+  
+  const getAgeGroup = () => {
+    if (!birthday) return '0to1';
+    const bDate = new Date(birthday);
+    const now = new Date();
+    if (isNaN(bDate.getTime())) return '0to1';
+    const months = (now.getFullYear() - bDate.getFullYear()) * 12 + (now.getMonth() - bDate.getMonth());
+    if (months >= 12 && months < 24) return '1to2';
+    return '0to1';
+  };
+  const ageGroup = getAgeGroup();
+
   return (
     <div className={`w-screen h-[100dvh] flex items-center justify-center bg-neutral-900 overflow-hidden relative`}>
       {/* 裝置切換開關 */}
@@ -117,11 +131,11 @@ const DeviceSimulator = ({ children }: { children: React.ReactNode }) => {
               ].map(({ name, Comp }) => (
                 <div key={name} className="flex flex-col items-center gap-2">
                   <div className="w-24 h-24 relative">
-                    <Comp />
+                    <Comp gender={babyGender as any} ageGroup={ageGroup} />
                   </div>
                   <span className="text-[10px] text-white/60 font-bold">{name}</span>
                   <div className="w-24 h-24 relative">
-                    <Comp isSick={true} />
+                    <Comp isSick={true} gender={babyGender as any} ageGroup={ageGroup} />
                   </div>
                   <span className="text-[9px] text-red-400 font-bold">{name} (生病)</span>
                 </div>
