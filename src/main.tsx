@@ -61,8 +61,14 @@ const DeviceSimulator = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const babyGender = localStorage.getItem('babyGender') || 'boy';
-  const birthday = localStorage.getItem('babyBirthday') || '';
+  let babyGender = 'boy';
+  let birthday = '';
+  try {
+    babyGender = localStorage.getItem('babyGender') || 'boy';
+    birthday = localStorage.getItem('babyBirthday') || '';
+  } catch (e) {
+    console.warn("localStorage access is restricted:", e);
+  }
   
   const getAgeGroup = () => {
     if (!birthday) return '0to1';

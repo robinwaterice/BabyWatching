@@ -1,4 +1,6 @@
-export interface CharacterProps {
+import React from 'react';
+
+interface CharacterProps {
   isSick?: boolean;
   gender?: 'boy' | 'girl';
   ageGroup?: string;
