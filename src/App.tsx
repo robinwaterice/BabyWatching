@@ -48,6 +48,17 @@ const calculateAge = (bday: string) => {
   return `${years > 0 ? years + '歲 ' : ''}${months > 0 ? months + '個月 ' : ''}${days}天`;
 }
 
+const getBabyAgeGroup = (bday: string) => {
+  if (!bday) return '0to1';
+  const bDate = new Date(bday);
+  const now = new Date();
+  if (isNaN(bDate.getTime())) return '0to1';
+  const months = (now.getFullYear() - bDate.getFullYear()) * 12 + (now.getMonth() - bDate.getMonth());
+  if (months >= 12 && months < 24) return '1to2';
+  if (months >= 24) return '2to5';
+  return '0to1';
+};
+
 
 
 export default function App() {
@@ -662,16 +673,7 @@ export default function App() {
   };
 
   const renderCharacter = () => {
-    const getAgeGroup = () => {
-      if (!birthday) return '0to1';
-      const bDate = new Date(birthday);
-      const now = new Date();
-      if (isNaN(bDate.getTime())) return '0to1';
-      const months = (now.getFullYear() - bDate.getFullYear()) * 12 + (now.getMonth() - bDate.getMonth());
-      if (months >= 12 && months < 24) return '1to2';
-      return '0to1';
-    };
-    const ageGroup = getAgeGroup();
+    const ageGroup = getBabyAgeGroup(birthday);
 
     switch(gameState.currentEvolution) {
       case '大天使': return <Archangel isSick={babyHealthState} gender={babyGender} ageGroup={ageGroup} />;
@@ -1158,6 +1160,7 @@ export default function App() {
             onClose={() => { setActiveMenu(null); setEditingRecord(null); }}
             onSubmit={(data) => { handleRecordSubmit(data); setEditingRecord(null); }}
             initialData={editingRecord}
+            ageGroup={getBabyAgeGroup(birthday)}
           />
         )}
         {activeMenu === 'medical' && (

@@ -78,18 +78,34 @@ export function RecordMenu({ module, onClose, onSubmit, initialData, ageGroup }:
   
   const getModuleConfig = () => {
     const is1to2 = ageGroup === '1to2';
+    const is2to5 = ageGroup === '2to5';
     switch (module) {
       case 'feeding':
         return {
           title: '🍼 飲食紀錄',
           placeholder: '輸入 ml 數或內容 (例如: 120ml)',
-          angels: [
+          angels: is2to5 ? [
+            { label: '自己把飯吃光光', alpha: 10, xp: 20 },
+            { label: '乖乖坐在餐椅上', alpha: 15, xp: 25 },
+            { label: '嘗試不喜歡的蔬菜', alpha: 20, xp: 30 },
+            { label: '主動收拾碗筷餐具', alpha: 15, xp: 25 },
+          ] : is1to2 ? [
+            { label: '順利完食', alpha: 10, xp: 20 },
+            { label: '練習用湯匙/叉子吃飯', alpha: 15, xp: 25 },
+            { label: '用吸管杯自己喝水', alpha: 15, xp: 25 },
+            { label: '嚼嚼吃完副食品', alpha: 10, xp: 20 },
+          ] : [
             { label: '順利完食', alpha: 10, xp: 20 },
             { label: '完美拍嗝', alpha: 15, xp: 25 },
             { label: '自主捧奶瓶喝奶', alpha: 15, xp: 25 },
             { label: '嚼嚼吃完副食品', alpha: 10, xp: 20 },
           ],
-          demons: is1to2 ? [
+          demons: is2to5 ? [
+            { label: '邊吃邊玩/走來走去', alpha: -15, xp: 20 },
+            { label: '大喊我不吃這個拒食', alpha: -10, xp: 15 },
+            { label: '挑食只吃零食餅乾', alpha: -15, xp: 20 },
+            { label: '打翻湯碗/吐出食物', alpha: -20, xp: 25 },
+          ] : is1to2 ? [
             { label: '故意把食物扔到地上 (玩食物)', alpha: -15, xp: 20 },
             { label: '瘋狂搖頭拒食 (緊閉雙唇)', alpha: -10, xp: 15 },
             { label: '搶湯匙把食物當玩具亂抹', alpha: -15, xp: 20 },
@@ -105,7 +121,12 @@ export function RecordMenu({ module, onClose, onSubmit, initialData, ageGroup }:
         return {
           title: '💩 嗯嗯紀錄',
           placeholder: '輸入狀況 (例如: 尿尿 / 便便)',
-          angels: is1to2 ? [
+          angels: is2to5 ? [
+            { label: '自己穿脫褲子如廁', alpha: 15, xp: 25 },
+            { label: '小馬桶上成功便便', alpha: 20, xp: 30 },
+            { label: '自己擦屁股跟洗手', alpha: 15, xp: 25 },
+            { label: '成功戒掉白天尿布', alpha: 20, xp: 30 },
+          ] : is1to2 ? [
             { label: '主動指著尿布示意濕了', alpha: 15, xp: 25 },
             { label: '小馬桶上成功便便 (如廁訓練)', alpha: 20, xp: 30 },
             { label: '換尿布時乖乖躺好配合', alpha: 15, xp: 25 },
@@ -116,7 +137,12 @@ export function RecordMenu({ module, onClose, onSubmit, initialData, ageGroup }:
             { label: '換乾淨尿布咯咯笑', alpha: 10, xp: 20 },
             { label: '嗯嗯時間規律不折騰', alpha: 15, xp: 25 },
           ],
-          demons: is1to2 ? [
+          demons: is2to5 ? [
+            { label: '玩得太開心尿濕褲子', alpha: -15, xp: 20 },
+            { label: '大便在內褲上不敢說', alpha: -20, xp: 25 },
+            { label: '憋尿憋大便抗拒馬桶', alpha: -15, xp: 20 },
+            { label: '洗手玩水浴室全弄濕', alpha: -10, xp: 15 },
+          ] : is1to2 ? [
             { label: '換尿布時翻滾逃跑 (泥鰍寶寶)', alpha: -15, xp: 20 },
             { label: '故意伸手摸髒尿布', alpha: -20, xp: 25 },
             { label: '拒絕坐在小馬桶上大哭', alpha: -15, xp: 20 },
@@ -132,7 +158,12 @@ export function RecordMenu({ module, onClose, onSubmit, initialData, ageGroup }:
         return {
           title: '💤 睡眠紀錄',
           placeholder: '輸入睡眠時長 (例如: 2.5小時)',
-          angels: is1to2 ? [
+          angels: is2to5 ? [
+            { label: '準時自主上床睡覺', alpha: 15, xp: 25 },
+            { label: '自己蓋被子乖乖閉眼', alpha: 20, xp: 30 },
+            { label: '一覺到天亮無夜驚', alpha: 25, xp: 40 },
+            { label: '醒來自己穿好衣服', alpha: 15, xp: 25 },
+          ] : is1to2 ? [
             { label: '抱著玩偶自己入睡 (獨立安撫)', alpha: 20, xp: 30 },
             { label: '一覺到天亮 (超長安穩睡眠)', alpha: 25, xp: 40 },
             { label: '時間到主動走到床邊', alpha: 20, xp: 30 },
@@ -143,7 +174,12 @@ export function RecordMenu({ module, onClose, onSubmit, initialData, ageGroup }:
             { label: '聽搖籃曲安靜入睡', alpha: 15, xp: 25 },
             { label: '醒來不哭鬧自己吃手手', alpha: 20, xp: 30 },
           ],
-          demons: is1to2 ? [
+          demons: is2to5 ? [
+            { label: '找各種藉口不睡討抱', alpha: -15, xp: 20 },
+            { label: '噩夢驚醒大哭難安撫', alpha: -20, xp: 30 },
+            { label: '半夜爬到爸媽床上擠人', alpha: -15, xp: 20 },
+            { label: '抗拒午睡搞得傍晚崩潰', alpha: -20, xp: 25 },
+          ] : is1to2 ? [
             { label: '精力旺盛床上彈跳/拒絕躺下', alpha: -15, xp: 20 },
             { label: '半夜醒來要求抱抱 (午夜DJ)', alpha: -20, xp: 30 },
             { label: '睡前半小時瘋狂揉眼崩潰', alpha: -15, xp: 20 },
@@ -159,7 +195,12 @@ export function RecordMenu({ module, onClose, onSubmit, initialData, ageGroup }:
         return {
           title: '💖 日常狀態',
           placeholder: '輸入溫度或備註 (例如: 36.5度)',
-          angels: is1to2 ? [
+          angels: is2to5 ? [
+            { label: '跟朋友手牽手分享玩具', alpha: 15, xp: 25 },
+            { label: '跌倒自己拍拍站起來', alpha: 20, xp: 30 },
+            { label: '完整句子表達心情/說故事', alpha: 20, xp: 30 },
+            { label: '乖乖排隊輪流玩溜滑梯', alpha: 15, xp: 25 },
+          ] : is1to2 ? [
             { label: '揮手拜拜/飛吻送愛心', alpha: 15, xp: 25 },
             { label: '模仿大人拿抹布掃把 (小幫手)', alpha: 20, xp: 30 },
             { label: '聽懂指令幫忙拿取東西', alpha: 15, xp: 25 },
@@ -170,7 +211,12 @@ export function RecordMenu({ module, onClose, onSubmit, initialData, ageGroup }:
             { label: '趴著抬頭練習順暢', alpha: 15, xp: 25 },
             { label: '逗弄時展現大大的微笑', alpha: 10, xp: 20 },
           ],
-          demons: is1to2 ? [
+          demons: is2to5 ? [
+            { label: '狂喊我的搶走所有玩具', alpha: -20, xp: 25 },
+            { label: '生氣摔東西/不順心發脾氣', alpha: -15, xp: 20 },
+            { label: '大聲尖叫抗拒大人指令', alpha: -20, xp: 30 },
+            { label: '哭鬧踢人/用頭撞地板自殘', alpha: -20, xp: 25 },
+          ] : is1to2 ? [
             { label: '地上打滾耍賴 (不要不要期)', alpha: -20, xp: 25 },
             { label: '生氣時摔玩具/丟東西', alpha: -15, xp: 20 },
             { label: '搶玩具/動手打人咬人', alpha: -20, xp: 30 },
