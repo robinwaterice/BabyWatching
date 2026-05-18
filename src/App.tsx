@@ -691,10 +691,20 @@ export default function App() {
   const handleResetAll = () => {
     setGameState({ level: 1, xp: 0, alignmentScore: 0, currentEvolution: '中立' });
     setBabyName('小寶寶');
+    setBabyGender('boy');
+    setUnlockedBadges({});
     setActivityLog([]);
     setMilestones([]);
     setBirthday('');
     setDismissedBubbles([]);
+    setVaccineAppointments({});
+    setSelectedVaccineId(null);
+    setVaccineQueue([]);
+    setHasViewedMilestones(false);
+    setBabyHealthState(false);
+    setDarkMode(false);
+    setMilestoneTab('milestone');
+    setMilestoneAgeRange('0-1');
     localStorage.clear();
     setMainTab('home');
     setShowResetConfirm(false);
