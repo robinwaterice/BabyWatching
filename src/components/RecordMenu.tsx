@@ -8,9 +8,64 @@ interface RecordMenuProps {
   onClose: () => void;
   onSubmit: (data: { id?: string, action: string, detail: string, alphaGain: number, xpGain: number, targetTimestamp?: number }) => void;
   initialData?: any;
+  ageGroup?: string;
 }
 
-export function RecordMenu({ module, onClose, onSubmit, initialData }: RecordMenuProps) {
+const renderLabelText = (label: string) => {
+  // 1. 如果包含括號，分拆為括號前後
+  if (label.includes(' (')) {
+    const idx = label.indexOf(' (');
+    return (
+      <div className="flex flex-col items-center leading-none">
+        <span className="text-neutral-700 font-bold text-center text-[11px]">{label.substring(0, idx)}</span>
+        <span className="text-neutral-500 font-bold text-[9px] text-center mt-1">{label.substring(idx).trim()}</span>
+      </div>
+    );
+  }
+  if (label.includes('(') && label.endsWith(')')) {
+    const idx = label.indexOf('(');
+    return (
+      <div className="flex flex-col items-center leading-none">
+        <span className="text-neutral-700 font-bold text-center text-[11px]">{label.substring(0, idx)}</span>
+        <span className="text-neutral-500 font-bold text-[9px] text-center mt-1">{label.substring(idx)}</span>
+      </div>
+    );
+  }
+  // 2. 如果包含斜線，分拆為斜線前後
+  if (label.includes('/')) {
+    const parts = label.split('/');
+    return (
+      <div className="flex flex-col items-center leading-none">
+        <span className="text-neutral-700 font-bold text-center text-[11px]">{parts[0]}</span>
+        <span className="text-neutral-500 font-bold text-[9px] text-center mt-1">/{parts[1]}</span>
+      </div>
+    );
+  }
+  // 3. 如果包含空格且不帶括號，分拆為空格前後
+  if (label.includes(' ')) {
+    const parts = label.split(' ');
+    return (
+      <div className="flex flex-col items-center leading-none">
+        <span className="text-neutral-700 font-bold text-center text-[11px]">{parts[0]}</span>
+        <span className="text-neutral-500 font-bold text-[9px] text-center mt-1">{parts.slice(1).join(' ')}</span>
+      </div>
+    );
+  }
+  // 4. 其他字數長度大於 6，則對半折行
+  if (label.length > 6) {
+    const mid = Math.ceil(label.length / 2);
+    return (
+      <div className="flex flex-col items-center leading-none">
+        <span className="text-neutral-700 font-bold text-center text-[11px]">{label.substring(0, mid)}</span>
+        <span className="text-neutral-700 font-bold text-center text-[11px] mt-1">{label.substring(mid)}</span>
+      </div>
+    );
+  }
+  
+  return <span className="text-neutral-700 font-bold text-center text-[11px]">{label}</span>;
+};
+
+export function RecordMenu({ module, onClose, onSubmit, initialData, ageGroup }: RecordMenuProps) {
   const [value, setValue] = useState(initialData?.detail || '');
   const [logTime, setLogTime] = useState(() => {
     if (initialData?.timestamp) {
@@ -22,6 +77,7 @@ export function RecordMenu({ module, onClose, onSubmit, initialData }: RecordMen
   });
   
   const getModuleConfig = () => {
+    const is1to2 = ageGroup === '1to2';
     switch (module) {
       case 'feeding':
         return {
@@ -30,52 +86,100 @@ export function RecordMenu({ module, onClose, onSubmit, initialData }: RecordMen
           angels: [
             { label: '順利完食', alpha: 10, xp: 20 },
             { label: '完美拍嗝', alpha: 15, xp: 25 },
+            { label: '自主捧奶瓶喝奶', alpha: 15, xp: 25 },
+            { label: '嚼嚼吃完副食品', alpha: 10, xp: 20 },
           ],
-          demons: [
+          demons: is1to2 ? [
+            { label: '故意把食物扔到地上 (玩食物)', alpha: -15, xp: 20 },
+            { label: '瘋狂搖頭拒食 (緊閉雙唇)', alpha: -10, xp: 15 },
+            { label: '搶湯匙把食物當玩具亂抹', alpha: -15, xp: 20 },
+            { label: '含著食物不吞大哭大鬧', alpha: -20, xp: 25 },
+          ] : [
             { label: '溢奶/吐奶', alpha: -10, xp: 15 },
             { label: '狂躁拒食', alpha: -15, xp: 20 },
+            { label: '喝奶睡著拍不醒', alpha: -10, xp: 15 },
+            { label: '吃副食品噴得到處都是', alpha: -15, xp: 20 },
           ]
         };
       case 'diaper':
         return {
           title: '💩 嗯嗯紀錄',
           placeholder: '輸入狀況 (例如: 尿尿 / 便便)',
-          angels: [
+          angels: is1to2 ? [
+            { label: '主動指著尿布示意濕了', alpha: 15, xp: 25 },
+            { label: '小馬桶上成功便便 (如廁訓練)', alpha: 20, xp: 30 },
+            { label: '換尿布時乖乖躺好配合', alpha: 15, xp: 25 },
+            { label: '便便後會說「臭臭」求換', alpha: 20, xp: 30 },
+          ] : [
             { label: '黃金軟便', alpha: 15, xp: 25 },
             { label: '順暢無比', alpha: 10, xp: 20 },
+            { label: '換乾淨尿布咯咯笑', alpha: 10, xp: 20 },
+            { label: '嗯嗯時間規律不折騰', alpha: 15, xp: 25 },
           ],
-          demons: [
+          demons: is1to2 ? [
+            { label: '換尿布時翻滾逃跑 (泥鰍寶寶)', alpha: -15, xp: 20 },
+            { label: '故意伸手摸髒尿布', alpha: -20, xp: 25 },
+            { label: '拒絕坐在小馬桶上大哭', alpha: -15, xp: 20 },
+            { label: '邊爬邊尿尿/便便在地上', alpha: -25, xp: 30 },
+          ] : [
             { label: '炸屎大魔王', alpha: -20, xp: 30 },
             { label: '羊便便/便秘', alpha: -10, xp: 15 },
             { label: '紅屁屁', alpha: -15, xp: 20 },
+            { label: '洗屁屁時瘋狂蹬腿反抗', alpha: -10, xp: 15 },
           ]
         };
       case 'sleep':
         return {
           title: '💤 睡眠紀錄',
           placeholder: '輸入睡眠時長 (例如: 2.5小時)',
-          angels: [
+          angels: is1to2 ? [
+            { label: '抱著玩偶自己入睡 (獨立安撫)', alpha: 20, xp: 30 },
+            { label: '一覺到天亮 (超長安穩睡眠)', alpha: 25, xp: 40 },
+            { label: '時間到主動走到床邊', alpha: 20, xp: 30 },
+            { label: '睡醒自己乖乖下床找爸媽', alpha: 15, xp: 25 },
+          ] : [
             { label: '天使秒睡', alpha: 20, xp: 30 },
             { label: '安穩長睡', alpha: 25, xp: 40 },
+            { label: '聽搖籃曲安靜入睡', alpha: 15, xp: 25 },
+            { label: '醒來不哭鬧自己吃手手', alpha: 20, xp: 30 },
           ],
-          demons: [
+          demons: is1to2 ? [
+            { label: '精力旺盛床上彈跳/拒絕躺下', alpha: -15, xp: 20 },
+            { label: '半夜醒來要求抱抱 (午夜DJ)', alpha: -20, xp: 30 },
+            { label: '睡前半小時瘋狂揉眼崩潰', alpha: -15, xp: 20 },
+            { label: '只要爸媽哄/換人就尖叫', alpha: -20, xp: 25 },
+          ] : [
             { label: '落地醒', alpha: -15, xp: 20 },
             { label: '半夜驚啼', alpha: -20, xp: 30 },
             { label: '哄睡地獄', alpha: -25, xp: 35 },
+            { label: '抱睡一放就哭 (樹懶寶寶)', alpha: -20, xp: 25 },
           ]
         };
       case 'mood':
         return {
           title: '💖 日常狀態',
           placeholder: '輸入溫度或備註 (例如: 36.5度)',
-          angels: [
+          angels: is1to2 ? [
+            { label: '揮手拜拜/飛吻送愛心', alpha: 15, xp: 25 },
+            { label: '模仿大人拿抹布掃把 (小幫手)', alpha: 20, xp: 30 },
+            { label: '聽懂指令幫忙拿取東西', alpha: 15, xp: 25 },
+            { label: '分享玩具/拍拍肩膀安慰人', alpha: 20, xp: 30 },
+          ] : [
             { label: '咯咯大笑', alpha: 15, xp: 25 },
             { label: '自主玩耍', alpha: 20, xp: 30 },
+            { label: '趴著抬頭練習順暢', alpha: 15, xp: 25 },
+            { label: '逗弄時展現大大的微笑', alpha: 10, xp: 20 },
           ],
-          demons: [
+          demons: is1to2 ? [
+            { label: '地上打滾耍賴 (不要不要期)', alpha: -20, xp: 25 },
+            { label: '生氣時摔玩具/丟東西', alpha: -15, xp: 20 },
+            { label: '搶玩具/動手打人咬人', alpha: -20, xp: 30 },
+            { label: '遇到挫折 (積木倒) 尖叫大哭', alpha: -15, xp: 20 },
+          ] : [
             { label: '不明哭鬧', alpha: -15, xp: 20 },
             { label: '酷熱發燒', alpha: -25, xp: 30 },
             { label: '打針暴哭', alpha: -10, xp: 15 },
+            { label: '猛長期整天掛奶吸吮', alpha: -15, xp: 20 },
           ]
         };
     }
@@ -138,7 +242,9 @@ export function RecordMenu({ module, onClose, onSubmit, initialData }: RecordMen
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold text-neutral-500 px-1">{config.title.split(' ')[1]}</label>
+          <label className="text-[11px] font-black text-yellow-600 dark:text-yellow-400 px-1 flex items-center gap-1 leading-normal tracking-wide">
+            <span>💡 溫馨提醒：多加記錄寶貝的日常，更有機會觸發神秘的隱藏成就喔！</span>
+          </label>
           <input
             type="text"
             value={value}
@@ -158,8 +264,8 @@ export function RecordMenu({ module, onClose, onSubmit, initialData }: RecordMen
                   onClick={() => handleSelect(item.label, item.alpha, item.xp)}
                   className="bg-white hover:bg-yellow-50 text-neutral-600 text-[11px] font-bold py-2 px-2 rounded-xl border border-yellow-200 transition-colors shadow-sm flex flex-col justify-center items-center gap-0.5"
                 >
-                  <span className="text-neutral-700">{item.label}</span>
-                  <div className="flex gap-1 text-[9px] text-[#888]">
+                  {renderLabelText(item.label)}
+                  <div className="flex gap-1 text-[9px] text-[#888] mt-0.5">
                     <span className="text-yellow-600">+{item.alpha}α</span>
                     <span>+{item.xp}XP</span>
                   </div>
@@ -177,8 +283,8 @@ export function RecordMenu({ module, onClose, onSubmit, initialData }: RecordMen
                   onClick={() => handleSelect(item.label, item.alpha, item.xp)}
                   className="bg-white hover:bg-purple-50 text-neutral-600 text-[11px] font-bold py-2 px-2 rounded-xl border border-purple-200 transition-colors shadow-sm flex flex-col justify-center items-center gap-0.5"
                 >
-                  <span className="text-neutral-700">{item.label}</span>
-                  <div className="flex gap-1 text-[9px] text-[#888]">
+                  {renderLabelText(item.label)}
+                  <div className="flex gap-1 text-[9px] text-[#888] mt-0.5">
                     <span className="text-purple-600">{item.alpha}α</span>
                     <span>+{item.xp}XP</span>
                   </div>

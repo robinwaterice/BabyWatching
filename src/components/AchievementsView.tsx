@@ -8,6 +8,10 @@ interface AchievementsViewProps {
   babyBirthday: string;
   vaccineAppointments?: Record<string, number>;
   setVaccineAppointments?: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+  activeTab: 'milestone' | 'vaccine';
+  setActiveTab: (tab: 'milestone' | 'vaccine') => void;
+  ageRange: '0-1' | '1-2' | '2-5';
+  setAgeRange: (range: '0-1' | '1-2' | '2-5') => void;
 }
 
 function getAgeString(birthday: string, timestamp: number) {
@@ -37,10 +41,18 @@ function getAgeString(birthday: string, timestamp: number) {
   return res;
 }
 
-export function AchievementsView({ unlockedBadges, onUnlockBadge, babyBirthday, vaccineAppointments, setVaccineAppointments }: AchievementsViewProps) {
+export function AchievementsView({ 
+  unlockedBadges, 
+  onUnlockBadge, 
+  babyBirthday, 
+  vaccineAppointments, 
+  setVaccineAppointments,
+  activeTab,
+  setActiveTab,
+  ageRange,
+  setAgeRange
+}: AchievementsViewProps) {
   const [selectedBadge, setSelectedBadge] = useState<BadgeDef | null>(null);
-  const [activeTab, setActiveTab] = useState<'milestone' | 'vaccine'>('milestone');
-  const [ageRange, setAgeRange] = useState<'0-1' | '1-2' | '2-5'>('0-1');
 
   const filterByAge = (badges: BadgeDef[]) => {
     return badges.filter(badge => {
@@ -53,7 +65,7 @@ export function AchievementsView({ unlockedBadges, onUnlockBadge, babyBirthday, 
   };
 
   const filteredClassicBadges = filterByAge(BADGE_DEFS.filter(b => b.type === 'classic'));
-  const hiddenBadges = BADGE_DEFS.filter(b => b.type.startsWith('hidden_'));
+  const hiddenBadges = filterByAge(BADGE_DEFS.filter(b => b.type.startsWith('hidden_')));
   const filteredVaccineRequiredBadges = filterByAge(BADGE_DEFS.filter(b => b.type === 'vaccine_required'));
   const filteredVaccineOptionalBadges = filterByAge(BADGE_DEFS.filter(b => b.type === 'vaccine_optional'));
 
@@ -417,9 +429,11 @@ export function AchievementsView({ unlockedBadges, onUnlockBadge, babyBirthday, 
                 </div>
               )}
               
-              <div className="bg-yellow-50 text-yellow-600 text-[11px] font-black rounded-lg px-3 py-1.5 mb-6 inline-flex border border-yellow-100">
-                獎勵 +{selectedBadge.xpReward} XP
-              </div>
+              {selectedBadge.xpReward > 0 && (
+                <div className="bg-yellow-50 text-yellow-600 text-[11px] font-black rounded-lg px-3 py-1.5 mb-6 inline-flex border border-yellow-100">
+                  獎勵 +{selectedBadge.xpReward} XP
+                </div>
+              )}
 
               <div className="flex gap-2 w-full">
                 <button

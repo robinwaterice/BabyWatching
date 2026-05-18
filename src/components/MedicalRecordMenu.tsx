@@ -22,7 +22,7 @@ export function MedicalRecordMenu({ onClose, onSubmit, initialData, isSick, onRe
     const now = new Date();
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   });
-  const [temperature, setTemperature] = useState(initialData?.temperature?.toString() || '');
+  const [temperature, setTemperature] = useState(initialData?.temperature?.toString() || '37');
   const [symptoms, setSymptoms] = useState<string[]>(initialData?.symptoms || []);
   const [treatments, setTreatments] = useState<string[]>(initialData?.treatments || []);
   const [note, setNote] = useState(initialData?.note || '');
@@ -112,14 +112,36 @@ export function MedicalRecordMenu({ onClose, onSubmit, initialData, isSick, onRe
         {/* 體溫 */}
         <div className="flex flex-col gap-1.5 relative">
           <label className="text-xs font-bold text-neutral-500 px-1">體溫 (°C)</label>
-          <input
-            type="number"
-            step="0.1"
-            value={temperature}
-            onChange={(e) => setTemperature(e.target.value)}
-            placeholder="例: 36.5"
-            className={`w-full bg-white rounded-xl px-4 py-2.5 font-bold outline-none focus:ring-2 transition-all border shadow-sm text-sm ${isFever ? 'text-red-600 border-red-300 focus:ring-red-200 bg-red-50' : 'text-neutral-700 border-neutral-200 focus:ring-rose-200'}`}
-          />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const current = parseFloat(temperature) || 37;
+                setTemperature((current - 0.5).toFixed(1));
+              }}
+              className="w-10 h-10 flex items-center justify-center bg-rose-50 dark:bg-rose-950/20 text-rose-500 hover:bg-rose-100 rounded-xl border border-rose-200 font-extrabold text-base transition-colors shadow-sm cursor-pointer select-none active:scale-95"
+            >
+              －
+            </button>
+            <input
+              type="number"
+              step="0.1"
+              value={temperature}
+              onChange={(e) => setTemperature(e.target.value)}
+              placeholder="例: 37.0"
+              className={`flex-1 min-w-0 bg-white rounded-xl px-4 py-2.5 font-bold outline-none focus:ring-2 transition-all border shadow-sm text-sm text-center ${isFever ? 'text-red-600 border-red-300 focus:ring-red-200 bg-red-50' : 'text-neutral-700 border-neutral-200 focus:ring-rose-200'}`}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const current = parseFloat(temperature) || 37;
+                setTemperature((current + 0.5).toFixed(1));
+              }}
+              className="w-10 h-10 flex items-center justify-center bg-rose-50 dark:bg-rose-950/20 text-rose-500 hover:bg-rose-100 rounded-xl border border-rose-200 font-extrabold text-base transition-colors shadow-sm cursor-pointer select-none active:scale-95"
+            >
+              ＋
+            </button>
+          </div>
         </div>
 
         {/* 症狀 */}

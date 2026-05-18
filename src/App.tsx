@@ -89,6 +89,8 @@ export default function App() {
   });
 
   const [mainTab, setMainTab] = useState<'home'|'log'|'milestones'|'profile'>('home');
+  const [milestoneTab, setMilestoneTab] = useState<'milestone' | 'vaccine'>('milestone');
+  const [milestoneAgeRange, setMilestoneAgeRange] = useState<'0-1' | '1-2' | '2-5'>('0-1');
   const [activityLog, setActivityLog] = useState<Activity[]>(() => {
     const saved = localStorage.getItem('babyActivityLog');
     return saved ? JSON.parse(saved) : [];
@@ -284,6 +286,32 @@ export default function App() {
       }
     }
 
+    // 檢查好奇心殺死貓 (h_curious)
+    if (badge.type === 'classic' && !newUnlockedBadges['h_curious']) {
+      const unlocked1to2Count = BADGE_DEFS.filter(cb => cb.type === 'classic' && cb.startMonth !== undefined && cb.startMonth >= 12 && cb.startMonth < 24)
+        .filter(cb => newUnlockedBadges[cb.id]).length;
+      if (unlocked1to2Count >= 2) {
+        const curiousBadge = BADGE_DEFS.find(b => b.id === 'h_curious');
+        if (curiousBadge) {
+          badgesToUnlock.push(curiousBadge);
+          newUnlockedBadges['h_curious'] = now;
+        }
+      }
+    }
+
+    // 檢查吾家幼苗初長成 (h_grow_up)
+    if (!newUnlockedBadges['h_grow_up'] && gameState.level >= 10) {
+      const unlocked2to5Count = BADGE_DEFS.filter(cb => cb.type === 'classic' && cb.startMonth !== undefined && cb.startMonth >= 24)
+        .filter(cb => newUnlockedBadges[cb.id]).length;
+      if (unlocked2to5Count >= 1) {
+        const growBadge = BADGE_DEFS.find(b => b.id === 'h_grow_up');
+        if (growBadge) {
+          badgesToUnlock.push(growBadge);
+          newUnlockedBadges['h_grow_up'] = now;
+        }
+      }
+    }
+
     setUnlockedBadges(newUnlockedBadges);
     if (badgesToUnlock.length > 0) {
       playAchievementSound();
@@ -428,56 +456,131 @@ export default function App() {
       }
     };
 
-    // h_poop: 炸屎大魔王
-    if (data.action.includes('炸屎大魔王')) triggerHidden('h_poop');
+    // h_poop: 生化武器 (炸屎大魔王)
+    if (data.action.includes('炸屎大魔王') || data.action.includes('邊爬邊尿尿') || data.action.includes('摸髒尿布') || (data.detail && (data.detail.includes('炸屎') || data.detail.includes('拉肚子') || data.detail.includes('拉稀')))) {
+      triggerHidden('h_poop');
+    }
     
     // h_scissor: 理智線剪刀手
-    if (data.detail && (data.detail.includes('扯') || data.detail.includes('抓') || data.detail.includes('打') || data.detail.includes('咬'))) {
+    if (data.action.includes('打人') || data.action.includes('咬人') || data.action.includes('摔玩具') || (data.detail && (data.detail.includes('扯') || data.detail.includes('抓') || data.detail.includes('打') || data.detail.includes('咬') || data.detail.includes('物理攻擊') || data.detail.includes('泥鰍寶寶')))) {
       triggerHidden('h_scissor');
     }
 
     // h_sleep: 睡神附體
-    if (data.action.includes('安穩長睡')) {
-       const match = data.detail.match(/\d+(\.\d+)?/);
+    if (data.action.includes('安穩長睡') || data.action.includes('一覺到天亮') || data.action.includes('獨立安撫') || (data.detail && (data.detail.includes('睡過夜') || data.detail.includes('過夜') || data.detail.includes('連續睡眠')))) {
+       const match = data.detail ? data.detail.match(/\d+(\.\d+)?/) : null;
        if (match && parseFloat(match[0]) >= 8) {
            triggerHidden('h_sleep');
-       } else if (data.detail.includes('8') || data.detail.includes('9') || data.detail.includes('10') || data.detail.includes('過夜')) {
+       } else if (!data.detail || data.detail.includes('8') || data.detail.includes('9') || data.detail.includes('10') || data.detail.includes('過夜') || data.action.includes('一覺到天亮')) {
            triggerHidden('h_sleep');
        }
     }
 
     // h_vaccine: 無痛晉級
-    if ((data.detail.includes('疫苗') || data.detail.includes('打針')) && data.alphaGain >= 0) {
+    if (data.action.includes('勇敢小戰士') || data.action.includes('快速單純紀錄') || (data.detail && (data.detail.includes('疫苗') || data.detail.includes('打針') || data.detail.includes('接種')) && data.alphaGain >= 0)) {
        triggerHidden('h_vaccine');
     }
 
-    // h_heal: 治癒魔法 - 連續 3 天正向情緒 (每天至少一筆心情紀錄，且皆 >= 0)
-    const daysWithRecord = Array.from(new Set(newActivityLog.map(l => l.dateStr)));
-    if (daysWithRecord.length >= 3) {
-      const last3Days = daysWithRecord.slice(0, 3);
-      const logsLast3Days = newActivityLog.filter(l => last3Days.includes(l.dateStr));
-      const hasNegative = logsLast3Days.some(l => l.alphaGain < 0);
-      // Ensure there is at least one mood log across these 3 days
-      const hasMood = logsLast3Days.some(l => l.module === 'mood');
-      if (!hasNegative && hasMood) {
-        triggerHidden('h_heal');
+    // h_heal: 治癒魔法
+    const positiveMoodCount = newActivityLog.filter(l => l.module === 'mood' && l.alphaGain > 0).length;
+    if (positiveMoodCount >= 3) {
+      triggerHidden('h_heal');
+    }
+
+    // h_dj: 午夜 DJ - 連續凌晨 2-4 點半夜驚啼
+    if (data.action.includes('半夜驚啼') || data.action.includes('午夜DJ') || data.action.includes('半夜醒來')) {
+      const djLogs = newActivityLog.filter(l => {
+        return l.action.includes('半夜驚啼') || l.action.includes('午夜DJ') || l.action.includes('半夜醒來');
+      });
+      if (djLogs.length >= 3) {
+        triggerHidden('h_dj');
       }
     }
 
-    // h_dj: 午夜 DJ - 連續 3 天在凌晨 2-4 點半夜驚啼
-    if (data.action.includes('半夜驚啼')) {
-      const h = now.getHours();
-      if (h >= 2 && h <= 4) {
-        const djLogs = newActivityLog.filter(l => {
-          if (!l.action.includes('半夜驚啼')) return false;
-          const logDate = new Date(l.timestamp || 0);
-          const lh = logDate.getHours();
-          return lh >= 2 && lh <= 4;
-        });
-        const djDates = Array.from(new Set(djLogs.map(l => l.dateStr)));
-        if (djDates.length >= 3) {
-          triggerHidden('h_dj');
-        }
+    // 1-2歲隱藏成就 Triggers
+    // h_plates_cleaner: 乾淨空盤大師
+    if (data.action.includes('順利完食') || data.action.includes('嚼嚼吃完副食品') || (data.detail && (data.detail.includes('空盤') || data.detail.includes('吃光') || data.detail.includes('全部吃完')))) {
+      const positiveFeedingCount = newActivityLog.filter(l => l.module === 'feeding' && l.alphaGain > 0).length;
+      if (positiveFeedingCount >= 3) {
+        triggerHidden('h_plates_cleaner');
+      }
+    }
+
+    // h_polite: 禮貌模範生
+    if (data.action.includes('揮手拜拜') || data.action.includes('分享玩具') || data.action.includes('飛吻') || (data.detail && (data.detail.includes('拜拜') || data.detail.includes('飛吻') || data.detail.includes('分享') || data.detail.includes('禮貌')))) {
+      const socialCount = newActivityLog.filter(l => l.action.includes('揮手拜拜') || l.action.includes('分享玩具') || l.action.includes('飛吻') || (l.detail && (l.detail.includes('拜拜') || l.detail.includes('飛吻') || l.detail.includes('分享')))).length;
+      if (socialCount >= 3) {
+        triggerHidden('h_polite');
+      }
+    }
+
+    // h_explorer: 勇敢小小探險家
+    if (data.action.includes('勇敢小戰士') || data.action.includes('幫忙拿') || (data.detail && (data.detail.includes('勇敢') || data.detail.includes('不怕') || data.detail.includes('探險')))) {
+      triggerHidden('h_explorer');
+    }
+
+    // h_tantrum: 尖叫尖叫再尖叫
+    if (data.action.includes('地上打滾耍賴') || data.action.includes('不要不要') || (data.detail && (data.detail.includes('尖叫') || data.detail.includes('耍賴') || data.detail.includes('大哭') || data.detail.includes('不要不要')))) {
+      triggerHidden('h_tantrum');
+    }
+
+    // h_gravity: 重力實驗科學家
+    if (data.action.includes('扔到地上') || (data.detail && (data.detail.includes('丟') || data.detail.includes('扔') || data.detail.includes('重力')))) {
+      const throwCount = newActivityLog.filter(l => (l.detail && (l.detail.includes('丟') || l.detail.includes('扔'))) || l.action.includes('扔到地上')).length;
+      if (throwCount >= 3) {
+        triggerHidden('h_gravity');
+      }
+    }
+
+    // h_stroller_run: 安全帶逃脫魔術師
+    if (data.action.includes('翻滾逃跑') || (data.detail && (data.detail.includes('逃跑') || data.detail.includes('脫逃') || data.detail.includes('掙脫') || data.detail.includes('泥鰍')))) {
+      triggerHidden('h_stroller_run');
+    }
+
+    // h_curious: 好奇心殺死貓
+    const unlocked1to2Count = BADGE_DEFS.filter(b => b.type === 'classic' && b.startMonth !== undefined && b.startMonth >= 12 && b.startMonth < 24)
+      .filter(b => unlockedBadges[b.id]).length;
+    if (unlocked1to2Count >= 2) {
+      triggerHidden('h_curious');
+    }
+
+    // 2-5歲隱藏成就 Triggers
+    // h_potty_hero: 馬桶小勇士
+    if (data.action.includes('小馬桶') || (data.detail && (data.detail.includes('戒尿布') || data.detail.includes('坐馬桶') || data.detail.includes('如廁') || data.detail.includes('小便成功') || data.detail.includes('尿尿成功') || data.detail.includes('便便成功')))) {
+      triggerHidden('h_potty_hero');
+    }
+
+    // h_sharing: 分享大天使
+    if (data.action.includes('分享玩具') || (data.detail && (data.detail.includes('分享') || data.detail.includes('給別的') || data.detail.includes('分給') || data.detail.includes('送給')))) {
+      triggerHidden('h_sharing');
+    }
+
+    // h_story_master: 說故事大師
+    if (data.detail && (data.detail.includes('故事') || data.detail.includes('長句') || data.detail.includes('說話') || data.detail.includes('句子') || data.detail.includes('說故事'))) {
+      triggerHidden('h_story_master');
+    }
+
+    // h_why: 十萬個為什麼轟炸
+    if (data.detail && (data.detail.includes('為什麼') || data.detail.includes('發問') || data.detail.includes('十萬個'))) {
+      triggerHidden('h_why');
+    }
+
+    // h_picasso: 牆面畢卡索
+    if (data.detail && (data.detail.includes('畫牆') || data.detail.includes('畫沙發') || data.detail.includes('畫床') || data.detail.includes('畢卡索') || data.detail.includes('塗鴉') || data.detail.includes('亂畫')) && data.alphaGain < 0) {
+      triggerHidden('h_picasso');
+    }
+
+    // h_bossy: 我是這裡的國王
+    if (data.detail && (data.detail.includes('我的') || data.detail.includes('不給') || data.detail.includes('搶玩具') || data.detail.includes('霸道') || data.detail.includes('國王'))) {
+      triggerHidden('h_bossy');
+    }
+
+    // h_grow_up: 吾家有女/子初長成
+    if (gameState.level >= 10) {
+      const unlocked2to5Count = BADGE_DEFS.filter(cb => cb.type === 'classic' && cb.startMonth !== undefined && cb.startMonth >= 24)
+        .filter(cb => unlockedBadges[cb.id]).length;
+      if (unlocked2to5Count >= 1) {
+        triggerHidden('h_grow_up');
       }
     }
 
@@ -649,7 +752,7 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="flex-1 w-full h-full flex flex-col items-center p-3 md:p-6 overflow-y-auto relative"
+              className="flex-1 w-full h-full flex flex-col items-center p-3 md:p-6 overflow-y-auto overflow-x-hidden relative"
             >
               {/* RPG 風格角色狀態卡片 */}
               <div className="flex-none w-full max-w-[340px] md:max-w-md glass-card rounded-[1.25rem] p-2.5 md:p-3 mt-3 transition-all z-10 relative border border-white/60 shadow-sm flex items-center gap-3">
@@ -736,6 +839,18 @@ export default function App() {
               className={`absolute z-20 glass-card ${bgColor} rounded-2xl p-2 px-3 flex items-center gap-2 shadow-sm border ${borderColor} animate-bounce cursor-pointer flex-shrink-0 max-w-[140px] md:max-w-[150px] ${isLeft ? 'left-0 md:left-4' : 'right-0 md:right-4'}`}
               style={{ top: `${row * 65}px`, animationDelay: `${idx * 0.15}s` }}
               onClick={() => {
+                const startMonth = badge.startMonth || 0;
+                let targetAgeRange: '0-1' | '1-2' | '2-5' = '0-1';
+                if (startMonth >= 12 && startMonth < 24) {
+                  targetAgeRange = '1-2';
+                } else if (startMonth >= 24) {
+                  targetAgeRange = '2-5';
+                }
+                setMilestoneAgeRange(targetAgeRange);
+
+                const targetTab: 'milestone' | 'vaccine' = badge.type.startsWith('vaccine') ? 'vaccine' : 'milestone';
+                setMilestoneTab(targetTab);
+
                 if (isHidden) {
                   setDismissedBubbles(prev => [...prev, badge.id]);
                   setMainTab('milestones');
@@ -859,6 +974,10 @@ export default function App() {
               babyBirthday={birthday}
               vaccineAppointments={vaccineAppointments}
               setVaccineAppointments={setVaccineAppointments}
+              activeTab={milestoneTab}
+              setActiveTab={setMilestoneTab}
+              ageRange={milestoneAgeRange}
+              setAgeRange={setMilestoneAgeRange}
             />
           )}
 

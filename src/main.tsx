@@ -77,6 +77,7 @@ const DeviceSimulator = ({ children }: { children: React.ReactNode }) => {
     if (isNaN(bDate.getTime())) return '0to1';
     const months = (now.getFullYear() - bDate.getFullYear()) * 12 + (now.getMonth() - bDate.getMonth());
     if (months >= 12 && months < 24) return '1to2';
+    if (months >= 24) return '2to5';
     return '0to1';
   };
   const ageGroup = getAgeGroup();
@@ -149,23 +150,61 @@ const DeviceSimulator = ({ children }: { children: React.ReactNode }) => {
             </div>
 
             {/* 右側：隱藏成就條件 */}
-            <div className="w-64 h-full overflow-y-auto pointer-events-auto bg-black/60 backdrop-blur-md p-4 rounded-3xl border border-white/10 flex flex-col gap-4 no-scrollbar shadow-2xl">
-              <h3 className="text-white text-xs font-black mb-2 border-b border-white/20 pb-2 uppercase tracking-widest">🚀 隱藏條件</h3>
+            <div className="w-72 h-full overflow-y-auto pointer-events-auto bg-black/75 backdrop-blur-md p-4 rounded-3xl border border-white/10 flex flex-col gap-4 no-scrollbar shadow-2xl">
+              <h3 className="text-white text-xs font-black mb-2 border-b border-white/20 pb-2 uppercase tracking-widest text-center">🚀 隱藏成就解鎖條件</h3>
               {(() => {
                 const unlocked = JSON.parse(localStorage.getItem('unlockedBadges') || '{}');
-                return [
-                  { id: 'h_poop', title: '生化武器', cond: '紀錄文字含「炸屎大魔王」' },
-                  { id: 'h_scissor', title: '理智線剪刀手', cond: '內容含「扯、抓、打、咬」' },
-                  { id: 'h_sleep', title: '睡神附體', cond: '安穩長睡且時數 >= 8' },
-                  { id: 'h_vaccine', title: '無痛晉級', cond: '打針/疫苗當天心情 >= 0' },
-                  { id: 'h_heal', title: '治癒魔法', cond: '連續3天無負向心情且有心情紀錄' },
-                  { id: 'h_dj', title: '午夜 DJ', cond: '連續3天凌晨 2-4 點半夜驚啼' },
-                  { id: 'h_speedrun', title: '速通大師', cond: '提早解鎖 3 個以上主線里程碑' }
-                ].map(h => (
-                  <div key={h.id} className="bg-white/5 p-3 rounded-xl border border-white/5 transition-colors hover:bg-white/10">
-                    <div className="text-[11px] font-black text-yellow-400 mb-1">{h.title}</div>
-                    <div className="text-[10px] text-white/60 font-bold leading-tight">{h.cond}</div>
-                    {unlocked[h.id] && <div className="text-[9px] text-emerald-400 font-black mt-1 flex items-center gap-1">已達成 <span className="text-[8px]">✅</span></div>}
+                const sections = [
+                  {
+                    title: "👶 0-1歲 隱藏彩蛋",
+                    items: [
+                      { id: 'h_poop', title: '生化武器 ☢️', cond: '紀錄文字含「炸屎大魔王」' },
+                      { id: 'h_scissor', title: '理智線剪刀手 ✂️', cond: '備註含「扯、抓、打、咬」' },
+                      { id: 'h_sleep', title: '睡神附體 😴', cond: '記錄安穩長睡且時數 >= 8' },
+                      { id: 'h_vaccine', title: '無痛晉級 💉', cond: '打針/疫苗當天心情無負向' },
+                      { id: 'h_heal', title: '治癒魔法 ✨', cond: '連續3天正向心情且有心情紀錄' },
+                      { id: 'h_dj', title: '午夜 DJ 🎧', cond: '連續3天凌晨 2-4 點半夜驚啼' },
+                      { id: 'h_speedrun', title: '速通大師 🚀', cond: '提早解鎖 3 個以上主線里程碑' }
+                    ]
+                  },
+                  {
+                    title: "👦 1-2歲 隱藏彩蛋",
+                    items: [
+                      { id: 'h_plates_cleaner', title: '乾淨空盤大師 🍽️', cond: '累計3次無拒食的正向飲食紀錄' },
+                      { id: 'h_polite', title: '禮貌模範生 🥰', cond: '累計3次飛吻/揮手/分享玩具' },
+                      { id: 'h_explorer', title: '勇敢探險家 🧭', cond: '用學習杯，或備註含「勇敢、不怕」' },
+                      { id: 'h_tantrum', title: '尖叫爆發期 😫', cond: '地上打滾耍賴，或內容含「尖叫、大哭」' },
+                      { id: 'h_gravity', title: '重力科學家 🍎', cond: '累計 3 次丟、扔食物或玩具' },
+                      { id: 'h_stroller_run', title: '逃逃魔術師 🏃‍♂️', cond: '換尿布翻滾逃跑，或備註含「逃跑、掙脫」' },
+                      { id: 'h_curious', title: '好奇心貓咪 🐈', cond: '累計解鎖 2 個以上的 1-2 歲主線成就' }
+                    ]
+                  },
+                  {
+                    title: "🦖 2-5歲 隱藏彩蛋",
+                    items: [
+                      { id: 'h_potty_hero', title: '馬桶小勇士 🚽', cond: '備註含「戒尿布、坐馬桶、如廁」' },
+                      { id: 'h_sharing', title: '分享大天使 🎁', cond: '備註含「分享、給別的、分給」' },
+                      { id: 'h_story_master', title: '說故事大師 📖', cond: '備註含「故事、長句、說話」' },
+                      { id: 'h_why', title: '為什麼轟炸 ❓', cond: '備註含「為什麼」' },
+                      { id: 'h_picasso', title: '牆面畢卡索 🖌️', cond: '備註含「畫牆、畫沙發、畫床」且心情負向' },
+                      { id: 'h_bossy', title: '這裡是國王 👑', cond: '備註含「我的、不給、搶玩具」' },
+                      { id: 'h_grow_up', title: '幼苗初長成 🌱', cond: '寶寶達到 Level 10 以上並解鎖 2-5 歲主線' }
+                    ]
+                  }
+                ];
+
+                return sections.map(sec => (
+                  <div key={sec.title} className="flex flex-col gap-2 mb-2">
+                    <h4 className="text-white/90 text-[10px] font-black tracking-wider bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/5">{sec.title}</h4>
+                    <div className="flex flex-col gap-1.5 pl-1">
+                      {sec.items.map(h => (
+                        <div key={h.id} className="bg-white/5 p-2.5 rounded-xl border border-white/5 transition-colors hover:bg-white/10 font-sans">
+                          <div className="text-[10px] font-black text-yellow-400 mb-0.5">{h.title}</div>
+                          <div className="text-[9px] text-white/60 font-bold leading-tight">{h.cond}</div>
+                          {unlocked[h.id] && <div className="text-[8px] text-emerald-400 font-black mt-1 flex items-center gap-1">已達成 <span className="text-[8px]">✅</span></div>}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ));
               })()}
